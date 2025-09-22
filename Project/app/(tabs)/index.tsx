@@ -1,82 +1,182 @@
-// =============================
-// FitLife Planner – Expo Router Starter (TypeScript)
-// Multi-screen app with tabs: Home, Upload, Analysis, Program, Progress, Profile
-// Minimal, mock-data-driven; ready to hook to API/DB later.
-// =============================
+import { Image } from 'expo-image';
+import { Link, useRouter } from 'expo-router';
+import { Button, Platform, StyleSheet, View } from 'react-native';
 
-
-// ===== FILE: app/_layout.tsx =====
-import { Tabs } from "expo-router";
-import { useEffect } from "react";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Platform } from "react-native";
-
-
-export default function RootLayout() {
-useEffect(() => {
-// Any global bootstrap if needed
-}, []);
-
-
-return (
-<GestureHandlerRootView style={{ flex: 1 }}>
-<SafeAreaProvider>
-<Tabs screenOptions={{
-headerShown: true,
-tabBarLabelStyle: { fontSize: 12 },
-tabBarStyle: { paddingVertical: Platform.OS === "ios" ? 8 : 4, height: 60 },
-}}>
-<Tabs.Screen name="index" options={{ title: "Home" }} />
-<Tabs.Screen name="upload" options={{ title: "Upload" }} />
-<Tabs.Screen name="analysis" options={{ title: "Analysis" }} />
-<Tabs.Screen name="program/index" options={{ title: "Program" }} />
-<Tabs.Screen name="progress" options={{ title: "Progress" }} />
-<Tabs.Screen name="profile" options={{ title: "Profile" }} />
-</Tabs>
-</SafeAreaProvider>
-</GestureHandlerRootView>
-);
-}
-
-
-// ===== FILE: app/index.tsx (Home/Dashboard) =====
-import { Link } from "expo-router";
-import { ScrollView, View } from "react-native";
-import { ThemedText, ThemedView } from "../components/Themed";
-import HealthSummaryCard from "../components/HealthSummaryCard";
-import TodayPlanCard from "../components/TodayPlanCard";
-import QuickActions from "../components/QuickActions";
-
+import { HelloWave } from '@/components/hello-wave';
+import ParallaxScrollView from '@/components/parallax-scroll-view';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 
 export default function HomeScreen() {
-return (
-<ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-<ThemedView style={{ gap: 12 }}>
-<ThemedText type="title">FitLife Planner</ThemedText>
-<ThemedText type="muted">ภาพรวมสุขภาพวันนี้</ThemedText>
-</ThemedView>
+  const router = useRouter();
 
+  // --- MOCK ข้อมูลผู้ใช้ (เชื่อมต่อ API/DB ภายหลังได้) ---
+  const user = {
+    name: 'ธัชพล',
+    weightKg: 83,
+    heightCm: 173,
+    bodyFatPct: 26,
+    targetWeightKg: 76,
+    lastUpdated: '2025-09-21',
+    today: {
+      workout: 'HIIT 20 นาที + ดัมเบล',
+      meals: ['ข้าวกล้องอกไก่ย่าง', 'สเต็กปลา + ผักย่าง'],
+    },
+    progress: [
+      { date: '2025-09-15', weight: 83.5 },
+      { date: '2025-09-18', weight: 83.0 },
+      { date: '2025-09-21', weight: 82.7 },
+    ],
+  };
 
-<HealthSummaryCard
-weightKg={83}
-heightCm={173}
-bodyFatPct={26}
-lastUpdated="2025-09-21"
-targetWeightKg={76}
-/>
+  const bmi = Number((user.weightKg / Math.pow(user.heightCm / 100, 2)).toFixed(1));
+  const remain = Math.max(0, user.weightKg - user.targetWeightKg);
 
+  return (
+    <ParallaxScrollView
+      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+      headerImage={
+        <Image
+          source={require('@/assets/images/partial-react-logo.png')}
+          style={styles.reactLogo}
+        />
+      }
+    >
+      {/* Header / Greeting */}
+      <ThemedView style={styles.titleContainer}>
+        <View style={{ flex: 1 }}>
+          <ThemedText type="title">FitLife Planner</ThemedText>
+          <ThemedText type="default">
+            สวัสดี {user.name} <ThemedText type="defaultSemiBold">👋</ThemedText>
+          </ThemedText>
+        </View>
+        <HelloWave />
+      </ThemedView>
 
-<TodayPlanCard
-workoutTitle="HIIT 20 นาที + ดัมเบล"
-meals={["ข้าวกล้องอกไก่ย่าง", "สเต็กปลา + ผักย่าง"]}
-/>
+      {/* Health Summary */}
+      <ThemedView style={styles.card}>
+        <ThemedText type="subtitle">สรุปสุขภาพวันนี้</ThemedText>
+        <View style={styles.rowBetween}>
+          <Stat label="น้ำหนัก" value={`${user.weightKg} kg`} />
+          <Stat label="ส่วนสูง" value={`${user.heightCm} cm`} />
+        </View>
+        <View style={styles.rowBetween}>
+          <Stat label="BMI" value={String(bmi)} />
+          <Stat label="ไขมัน" value={`${user.bodyFatPct}%`} />
+        </View>
+        <ThemedText style={styles.muted}>อัปเดตล่าสุด: {user.lastUpdated}</ThemedText>
+        <ThemedText>เหลืออีก ~{remain.toFixed(1)} kg ถึงเป้าหมาย</ThemedText>
+      </ThemedView>
 
+      {/* Progress Snapshot (แบบย่อ) */}
+      <ThemedView style={styles.card}>
+        <ThemedText type="subtitle">ความคืบหน้า</ThemedText>
+        {user.progress.map((p, i) => (
+          <View key={i} style={styles.rowBetween}>
+            <ThemedText>{p.date}</ThemedText>
+            <ThemedText>{p.weight} kg</ThemedText>
+          </View>
+        ))}
+        <ThemedText style={styles.muted}>
+          เคล็ดลับ: {Platform.select({ ios: 'เปิดแอปสุขภาพซิงค์ข้อมูลอัตโนมัติ', android: 'เชื่อม Google Fit เพื่อซิงค์ข้อมูล' })}
+        </ThemedText>
+      </ThemedView>
 
-<QuickActions />
+      {/* Today's Plan */}
+      <ThemedView style={styles.card}>
+        <ThemedText type="subtitle">แผนวันนี้</ThemedText>
+        <ThemedText>ออกกำลังกาย: {user.today.workout}</ThemedText>
+        <View style={{ gap: 4, marginTop: 8 }}>
+          <ThemedText>อาหารแนะนำ:</ThemedText>
+          {user.today.meals.map((m, i) => (
+            <ThemedText key={i}>• {m}</ThemedText>
+          ))}
+        </View>
+      </ThemedView>
 
+      {/* Quick Actions */}
+      <ThemedView style={styles.card}>
+        <ThemedText type="subtitle">ทางลัด</ThemedText>
+        <View style={styles.actionsRow}>
+          <Button title="อัปโหลดภาพ" onPress={() => router.push('/upload')} />
+          <Button title="บันทึกน้ำหนัก" onPress={() => router.push('/progress')} />
+          <Button title="โปรแกรมวันนี้" onPress={() => router.push('/program')} />
+        </View>
+      </ThemedView>
 
-<ThemedView style={{ gap: 8 }}>
-<ThemedText type="subtitle">ไปยังเมนูหลัก</ThemedText>
-<View style={{ gap: 8 }}>
-<Link href="/upload"><ThemedText type="link">อัปโหลดภาพใหม่</ThemedText></Link>
+      {/* Navigation / Links */}
+      <ThemedView style={styles.card}>
+        <ThemedText type="subtitle">ไปยังเมนูหลัก</ThemedText>
+        <View style={{ gap: 8 }}>
+          <Link href="/upload"><ThemedText type="link">อัปโหลดภาพใหม่</ThemedText></Link>
+          <Link href="/analysis"><ThemedText type="link">ดูผลวิเคราะห์ร่างกาย</ThemedText></Link>
+          <Link href="/program"><ThemedText type="link">โปรแกรมสุขภาพ</ThemedText></Link>
+          <Link href="/progress"><ThemedText type="link">ติดตามความคืบหน้า</ThemedText></Link>
+          <Link href="/profile"><ThemedText type="link">โปรไฟล์/การตั้งค่า</ThemedText></Link>
+        </View>
+      </ThemedView>
+
+      {/* Developer hint (คงสไตล์เดิมของเทมเพลตไว้เผื่อดีบัก) */}
+      <ThemedView style={styles.hintCard}>
+        <ThemedText type="subtitle">Dev Hint</ThemedText>
+        <ThemedText>
+          แก้ไฟล์ <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> แล้วรีเฟรช.
+          เปิด DevTools ด้วย{' '}
+          <ThemedText type="defaultSemiBold">
+            {Platform.select({ ios: 'cmd + d', android: 'cmd + m', web: 'F12' })}
+          </ThemedText>
+        </ThemedText>
+      </ThemedView>
+    </ParallaxScrollView>
+  );
+}
+
+/** ==== Helpers ==== */
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={{ gap: 2 }}>
+      <ThemedText style={styles.muted}>{label}</ThemedText>
+      <ThemedText type="defaultSemiBold">{value}</ThemedText>
+    </View>
+  );
+}
+
+/** ==== Styles ==== */
+const styles = StyleSheet.create({
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 8,
+  },
+  reactLogo: {
+    height: 178,
+    width: 290,
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+  },
+  card: {
+    gap: 10,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: '#11111110',
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'space-between',
+  },
+  hintCard: {
+    gap: 8,
+    padding: 16,
+    borderRadius: 16,
+  },
+  muted: {
+    color: '#666',
+  },
+});

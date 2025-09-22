@@ -9,7 +9,7 @@ export default function Home() {
   const router = useRouter();
 
   // mock data (ปรับเป็นค่าจริง/ดึงจาก DB ภายหลังได้)
-  const metrics = { weight: '165 lbs', height: `5'9"`, bmi: '24.3', body: '22%' };
+  const metrics = { weight: '170 lbs', height: `5'9"`, bmi: '24.3', body: '22%' };
 
   return (
     <View style={styles.screen}>

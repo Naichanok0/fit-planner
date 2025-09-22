@@ -1,19 +1,49 @@
 import { Image } from 'expo-image';
-import { Link, useRouter } from 'expo-router';
-import { Pressable, StyleSheet, View, ScrollView } from 'react-native';
+import { Link, usePathname, useRouter } from 'expo-router';
+import React, { useMemo, useState } from 'react';
+import { Pressable, StyleSheet, View, ScrollView, LayoutChangeEvent } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
 export default function Home() {
   const router = useRouter();
+  const pathname = usePathname();
+  const insets = useSafeAreaInsets();
 
-  // mock data (ปรับเป็นค่าจริง/ดึงจาก DB ภายหลังได้)
+  // mock data
   const metrics = { weight: '170 lbs', height: `5'9"`, bmi: '24.3', body: '22%' };
 
+  // ====== ทำ DOT ให้สเกลตามรูป ======
+  const [heroSize, setHeroSize] = useState({ w: 0, h: 0 });
+  const onHeroLayout = (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    setHeroSize({ w: width, h: height });
+  };
+  const dots = useMemo(() => {
+    // จุดแบบ normalized (0..1)
+    const P = [
+      { x: 0.30, y: 0.06 }, { x: 0.62, y: 0.06 }, // ไหล่
+      { x: 0.46, y: 0.22 },                        // กลางอก
+      { x: 0.28, y: 0.37 }, { x: 0.65, y: 0.37 },  // ศอก
+      { x: 0.22, y: 0.60 }, { x: 0.73, y: 0.60 },  // มือ/สะโพก
+      { x: 0.46, y: 0.54 },                        // สะเอว
+      { x: 0.36, y: 0.80 }, { x: 0.56, y: 0.80 },  // เข่า
+    ];
+    const r = 4; // รัศมีจุด (px)
+    return P.map((p, i) => ({
+      key: String(i),
+      style: {
+        left: heroSize.w * p.x - r,
+        top: heroSize.h * p.y - r,
+      } as const,
+    }));
+  }, [heroSize]);
+
   return (
-    <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
+    <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: 90 + insets.bottom }]}>
         {/* ===== Header ===== */}
         <ThemedView style={styles.headerRow}>
           <ThemedText type="title" style={styles.appTitle}>HEALTH APP</ThemedText>
@@ -23,14 +53,14 @@ export default function Home() {
         </ThemedView>
 
         {/* ===== Body Image + pose dots ===== */}
-        <ThemedView style={styles.heroBox}>
+        <ThemedView style={styles.heroBox} onLayout={onHeroLayout}>
           <Image
             source={{ uri: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1200' }}
             style={styles.bodyImg}
             contentFit="cover"
           />
-          {POSE_POINTS.map((p, i) => (
-            <View key={i} style={[styles.dot, { left: p.x, top: p.y }]} />
+          {dots.map(d => (
+            <View key={d.key} style={[styles.dot, d.style]} />
           ))}
         </ThemedView>
 
@@ -66,19 +96,27 @@ export default function Home() {
         </ThemedView>
       </ScrollView>
 
-      {/* ===== Bottom Nav (fixed) ===== */}
-      <ThemedView style={styles.tabBar}>
-        <Link href="/" asChild>
-          <Pressable style={styles.tabItem}><ThemedText style={[styles.tabIcon, styles.active]}>🏠</ThemedText></Pressable>
-        </Link>
-        <Link href="/report" asChild>
-          <Pressable style={styles.tabItem}><ThemedText style={styles.tabIcon}>📊</ThemedText></Pressable>
-        </Link>
-        <Link href="/profile" asChild>
-          <Pressable style={styles.tabItem}><ThemedText style={styles.tabIcon}>👤</ThemedText></Pressable>
-        </Link>
-      </ThemedView>
-    </View>
+      {/* ===== Bottom Nav (fixed + safe area) ===== */}
+      <SafeAreaView edges={['bottom']} style={styles.tabSafe}>
+        <ThemedView style={styles.tabBar}>
+          <Link href="/" asChild>
+            <Pressable style={styles.tabItem}>
+              <ThemedText style={[styles.tabIcon, pathname === '/' && styles.active]}>🏠</ThemedText>
+            </Pressable>
+          </Link>
+          <Link href="/report" asChild>
+            <Pressable style={styles.tabItem}>
+              <ThemedText style={[styles.tabIcon, pathname.startsWith('/report') && styles.active]}>📊</ThemedText>
+            </Pressable>
+          </Link>
+          <Link href="/profile" asChild>
+            <Pressable style={styles.tabItem}>
+              <ThemedText style={[styles.tabIcon, pathname.startsWith('/profile') && styles.active]}>👤</ThemedText>
+            </Pressable>
+          </Link>
+        </ThemedView>
+      </SafeAreaView>
+    </SafeAreaView>
   );
 }
 
@@ -92,20 +130,10 @@ function Info({ label, value }: { label: string; value: string }) {
   );
 }
 
-/* ===== Mock จุด Pose ===== */
-const POSE_POINTS = [
-  { x: 90, y: 10 }, { x: 150, y: 10 }, // ไหล่
-  { x: 120, y: 40 },                    // กลางอก
-  { x: 85, y: 70 }, { x: 155, y: 70 },  // ศอก
-  { x: 70, y: 110 }, { x: 170, y: 110 },// มือ
-  { x: 120, y: 100 },                   // สะเอว
-  { x: 95, y: 150 }, { x: 145, y: 150 },// เข่า
-];
-
 /* ===== Styles ===== */
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#fff' },
-  content: { padding: 16, paddingBottom: 90 }, // กันชนให้ไม่ทับแท็บล่าง
+  content: { padding: 16 },
 
   headerRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -116,8 +144,8 @@ const styles = StyleSheet.create({
   menuIcon: { fontSize: 22 },
 
   heroBox: {
-    height: 190, borderRadius: 16, overflow: 'hidden',
-    backgroundColor: '#eef6ff', marginBottom: 12, position: 'relative',
+    borderRadius: 16, overflow: 'hidden', backgroundColor: '#eef6ff',
+    marginBottom: 12, position: 'relative', aspectRatio: 16 / 9, // สูงตามสัดส่วน
   },
   bodyImg: { width: '100%', height: '100%' },
   dot: {
@@ -151,8 +179,8 @@ const styles = StyleSheet.create({
   grid: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   lineSeg: { position: 'absolute', height: 2, backgroundColor: '#0f172a', borderRadius: 2 },
 
+  tabSafe: { backgroundColor: '#fff' },
   tabBar: {
-    position: 'absolute', left: 0, right: 0, bottom: 0,
     flexDirection: 'row', justifyContent: 'space-around',
     paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#e2e8f0',
     backgroundColor: '#fff',

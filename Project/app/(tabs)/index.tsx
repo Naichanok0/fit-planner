@@ -1,98 +1,82 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+// =============================
+// FitLife Planner – Expo Router Starter (TypeScript)
+// Multi-screen app with tabs: Home, Upload, Analysis, Program, Progress, Profile
+// Minimal, mock-data-driven; ready to hook to API/DB later.
+// =============================
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome hello!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+// ===== FILE: app/_layout.tsx =====
+import { Tabs } from "expo-router";
+import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Platform } from "react-native";
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+
+export default function RootLayout() {
+useEffect(() => {
+// Any global bootstrap if needed
+}, []);
+
+
+return (
+<GestureHandlerRootView style={{ flex: 1 }}>
+<SafeAreaProvider>
+<Tabs screenOptions={{
+headerShown: true,
+tabBarLabelStyle: { fontSize: 12 },
+tabBarStyle: { paddingVertical: Platform.OS === "ios" ? 8 : 4, height: 60 },
+}}>
+<Tabs.Screen name="index" options={{ title: "Home" }} />
+<Tabs.Screen name="upload" options={{ title: "Upload" }} />
+<Tabs.Screen name="analysis" options={{ title: "Analysis" }} />
+<Tabs.Screen name="program/index" options={{ title: "Program" }} />
+<Tabs.Screen name="progress" options={{ title: "Progress" }} />
+<Tabs.Screen name="profile" options={{ title: "Profile" }} />
+</Tabs>
+</SafeAreaProvider>
+</GestureHandlerRootView>
+);
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+
+// ===== FILE: app/index.tsx (Home/Dashboard) =====
+import { Link } from "expo-router";
+import { ScrollView, View } from "react-native";
+import { ThemedText, ThemedView } from "../components/Themed";
+import HealthSummaryCard from "../components/HealthSummaryCard";
+import TodayPlanCard from "../components/TodayPlanCard";
+import QuickActions from "../components/QuickActions";
+
+
+export default function HomeScreen() {
+return (
+<ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+<ThemedView style={{ gap: 12 }}>
+<ThemedText type="title">FitLife Planner</ThemedText>
+<ThemedText type="muted">ภาพรวมสุขภาพวันนี้</ThemedText>
+</ThemedView>
+
+
+<HealthSummaryCard
+weightKg={83}
+heightCm={173}
+bodyFatPct={26}
+lastUpdated="2025-09-21"
+targetWeightKg={76}
+/>
+
+
+<TodayPlanCard
+workoutTitle="HIIT 20 นาที + ดัมเบล"
+meals={["ข้าวกล้องอกไก่ย่าง", "สเต็กปลา + ผักย่าง"]}
+/>
+
+
+<QuickActions />
+
+
+<ThemedView style={{ gap: 8 }}>
+<ThemedText type="subtitle">ไปยังเมนูหลัก</ThemedText>
+<View style={{ gap: 8 }}>
+<Link href="/upload"><ThemedText type="link">อัปโหลดภาพใหม่</ThemedText></Link>

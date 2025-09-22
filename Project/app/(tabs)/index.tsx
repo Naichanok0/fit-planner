@@ -1,182 +1,114 @@
-import { Image } from 'expo-image';
-import { Link, useRouter } from 'expo-router';
-import { Button, Platform, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-
-export default function HomeScreen() {
+export default function Home() {
   const router = useRouter();
 
-  // --- MOCK ข้อมูลผู้ใช้ (เชื่อมต่อ API/DB ภายหลังได้) ---
-  const user = {
-    name: 'ธัชพล',
-    weightKg: 83,
-    heightCm: 173,
-    bodyFatPct: 26,
-    targetWeightKg: 76,
-    lastUpdated: '2025-09-21',
-    today: {
-      workout: 'HIIT 20 นาที + ดัมเบล',
-      meals: ['ข้าวกล้องอกไก่ย่าง', 'สเต็กปลา + ผักย่าง'],
-    },
-    progress: [
-      { date: '2025-09-15', weight: 83.5 },
-      { date: '2025-09-18', weight: 83.0 },
-      { date: '2025-09-21', weight: 82.7 },
+  const plan = {
+    title: "BEGINNER PLAN",
+    subtitle: "BODYWEIGHT · 30 DAYS",
+    duration: "8–15 min/day",
+    progress: 0,
+    days: [
+      { day: 1, time: "08:38", rest: false },
+      { day: 2, time: "10:14", rest: false },
+      { day: 3, time: "09:14", rest: false },
+      { day: 4, time: "Rest Day", rest: true },
+      { day: 5, time: "11:05", rest: false },
     ],
   };
 
-  const bmi = Number((user.weightKg / Math.pow(user.heightCm / 100, 2)).toFixed(1));
-  const remain = Math.max(0, user.weightKg - user.targetWeightKg);
-
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }
-    >
-      {/* Header / Greeting */}
-      <ThemedView style={styles.titleContainer}>
-        <View style={{ flex: 1 }}>
-          <ThemedText type="title">FitLife Planner</ThemedText>
-          <ThemedText type="default">
-            สวัสดี {user.name} <ThemedText type="defaultSemiBold">👋</ThemedText>
-          </ThemedText>
-        </View>
-        <HelloWave />
-      </ThemedView>
+    <View style={styles.container}>
+      {/* Header */}
+      <Text style={styles.header}>{plan.title}</Text>
+      <Text style={styles.subHeader}>{plan.subtitle}</Text>
+      <Text style={styles.duration}>{plan.duration}</Text>
+      <Text style={styles.progress}>{plan.progress}% Finished</Text>
 
-      {/* Health Summary */}
-      <ThemedView style={styles.card}>
-        <ThemedText type="subtitle">สรุปสุขภาพวันนี้</ThemedText>
-        <View style={styles.rowBetween}>
-          <Stat label="น้ำหนัก" value={`${user.weightKg} kg`} />
-          <Stat label="ส่วนสูง" value={`${user.heightCm} cm`} />
-        </View>
-        <View style={styles.rowBetween}>
-          <Stat label="BMI" value={String(bmi)} />
-          <Stat label="ไขมัน" value={`${user.bodyFatPct}%`} />
-        </View>
-        <ThemedText style={styles.muted}>อัปเดตล่าสุด: {user.lastUpdated}</ThemedText>
-        <ThemedText>เหลืออีก ~{remain.toFixed(1)} kg ถึงเป้าหมาย</ThemedText>
-      </ThemedView>
+      {/* List Days */}
+      <FlatList
+        data={plan.days}
+        keyExtractor={(item) => String(item.day)}
+        renderItem={({ item }) => (
+          <View style={styles.dayCard}>
+            <View>
+              <Text style={styles.dayTitle}>DAY {item.day}</Text>
+              <Text style={styles.dayTime}>{item.time}</Text>
+            </View>
 
-      {/* Progress Snapshot (แบบย่อ) */}
-      <ThemedView style={styles.card}>
-        <ThemedText type="subtitle">ความคืบหน้า</ThemedText>
-        {user.progress.map((p, i) => (
-          <View key={i} style={styles.rowBetween}>
-            <ThemedText>{p.date}</ThemedText>
-            <ThemedText>{p.weight} kg</ThemedText>
+            {item.rest ? (
+              <Text style={styles.restLabel}>REST</Text>
+            ) : (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.startButton,
+                  pressed && { opacity: 0.8 },
+                ]}
+                onPress={() => router.push(`/workout/${item.day}`)}
+              >
+                <Text style={styles.startText}>START</Text>
+              </Pressable>
+            )}
           </View>
-        ))}
-        <ThemedText style={styles.muted}>
-          เคล็ดลับ: {Platform.select({ ios: 'เปิดแอปสุขภาพซิงค์ข้อมูลอัตโนมัติ', android: 'เชื่อม Google Fit เพื่อซิงค์ข้อมูล' })}
-        </ThemedText>
-      </ThemedView>
+        )}
+      />
 
-      {/* Today's Plan */}
-      <ThemedView style={styles.card}>
-        <ThemedText type="subtitle">แผนวันนี้</ThemedText>
-        <ThemedText>ออกกำลังกาย: {user.today.workout}</ThemedText>
-        <View style={{ gap: 4, marginTop: 8 }}>
-          <ThemedText>อาหารแนะนำ:</ThemedText>
-          {user.today.meals.map((m, i) => (
-            <ThemedText key={i}>• {m}</ThemedText>
-          ))}
-        </View>
-      </ThemedView>
-
-      {/* Quick Actions */}
-      <ThemedView style={styles.card}>
-        <ThemedText type="subtitle">ทางลัด</ThemedText>
-        <View style={styles.actionsRow}>
-          <Button title="อัปโหลดภาพ" onPress={() => router.push('/upload')} />
-          <Button title="บันทึกน้ำหนัก" onPress={() => router.push('/progress')} />
-          <Button title="โปรแกรมวันนี้" onPress={() => router.push('/program')} />
-        </View>
-      </ThemedView>
-
-      {/* Navigation / Links */}
-      <ThemedView style={styles.card}>
-        <ThemedText type="subtitle">ไปยังเมนูหลัก</ThemedText>
-        <View style={{ gap: 8 }}>
-          <Link href="/upload"><ThemedText type="link">อัปโหลดภาพใหม่</ThemedText></Link>
-          <Link href="/analysis"><ThemedText type="link">ดูผลวิเคราะห์ร่างกาย</ThemedText></Link>
-          <Link href="/program"><ThemedText type="link">โปรแกรมสุขภาพ</ThemedText></Link>
-          <Link href="/progress"><ThemedText type="link">ติดตามความคืบหน้า</ThemedText></Link>
-          <Link href="/profile"><ThemedText type="link">โปรไฟล์/การตั้งค่า</ThemedText></Link>
-        </View>
-      </ThemedView>
-
-      {/* Developer hint (คงสไตล์เดิมของเทมเพลตไว้เผื่อดีบัก) */}
-      <ThemedView style={styles.hintCard}>
-        <ThemedText type="subtitle">Dev Hint</ThemedText>
-        <ThemedText>
-          แก้ไฟล์ <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> แล้วรีเฟรช.
-          เปิด DevTools ด้วย{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m', web: 'F12' })}
-          </ThemedText>
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
-}
-
-/** ==== Helpers ==== */
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={{ gap: 2 }}>
-      <ThemedText style={styles.muted}>{label}</ThemedText>
-      <ThemedText type="defaultSemiBold">{value}</ThemedText>
+      {/* Bottom Navigation */}
+      <View style={styles.tabBar}>
+        <Pressable style={styles.tabItem}>
+          <Text style={[styles.tabText, styles.activeTab]}>30 PLAN</Text>
+        </Pressable>
+        <Pressable style={styles.tabItem}>
+          <Text style={styles.tabText}>WORKOUT</Text>
+        </Pressable>
+        <Pressable style={styles.tabItem}>
+          <Text style={styles.tabText}>REPORT</Text>
+        </Pressable>
+        <Pressable style={styles.tabItem}>
+          <Text style={styles.tabText}>ME</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
 
-/** ==== Styles ==== */
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-  card: {
-    gap: 10,
+  container: { flex: 1, backgroundColor: "#000", padding: 16 },
+  header: { color: "#fff", fontSize: 20, fontWeight: "700" },
+  subHeader: { color: "#aaa", fontSize: 14, marginBottom: 4 },
+  duration: { color: "#ddd", fontSize: 14 },
+  progress: { color: "#aaa", fontSize: 12, marginBottom: 16 },
+
+  dayCard: {
+    backgroundColor: "#111",
+    borderRadius: 12,
     padding: 16,
-    borderRadius: 16,
-    backgroundColor: '#11111110',
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  rowBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  dayTitle: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  dayTime: { color: "#aaa", fontSize: 14 },
+  restLabel: { color: "#f87171", fontSize: 16, fontWeight: "600" },
+
+  startButton: {
+    backgroundColor: "#3b82f6",
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
   },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    justifyContent: 'space-between',
+  startText: { color: "#fff", fontWeight: "700" },
+
+  tabBar: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#222",
   },
-  hintCard: {
-    gap: 8,
-    padding: 16,
-    borderRadius: 16,
-  },
-  muted: {
-    color: '#666',
-  },
+  tabItem: { alignItems: "center" },
+  tabText: { color: "#aaa", fontSize: 12 },
+  activeTab: { color: "#3b82f6", fontWeight: "700" },
 });

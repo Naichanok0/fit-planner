@@ -1,6 +1,7 @@
+// app/_layout.tsx
+import { Slot } from 'expo-router';
 
-import { Tabs } from 'expo-router';
-
-export default function TabsLayout() {
-  return <Tabs screenOptions={{ headerShown: false }} />;
+export default function RootLayout() {
+  // ไม่สร้าง Tabs/Stack เพื่อเลี่ยง error level undefined
+  return <Slot />;
 }

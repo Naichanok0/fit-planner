@@ -1,3 +1,4 @@
+// app/index.tsx
 import { Image } from 'expo-image';
 import { Link, usePathname, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
@@ -13,25 +14,24 @@ export default function Home() {
   const insets = useSafeAreaInsets();
 
   // mock data
-  const metrics = { weight: '180 lbs', height: `5'9"`, bmi: '24.3', body: '22%' };
+  const metrics = { weight: '170 lbs', height: `5'9"`, bmi: '24.3', body: '22%' };
 
-  // ====== ทำ DOT ให้สเกลตามรูป ======
   const [heroSize, setHeroSize] = useState({ w: 0, h: 0 });
   const onHeroLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
     setHeroSize({ w: width, h: height });
   };
+
   const dots = useMemo(() => {
-    // จุดแบบ normalized (0..1)
     const P = [
-      { x: 0.30, y: 0.06 }, { x: 0.62, y: 0.06 }, // ไหล่
-      { x: 0.46, y: 0.22 },                        // กลางอก
-      { x: 0.28, y: 0.37 }, { x: 0.65, y: 0.37 },  // ศอก
-      { x: 0.22, y: 0.60 }, { x: 0.73, y: 0.60 },  // มือ/สะโพก
-      { x: 0.46, y: 0.54 },                        // สะเอว
-      { x: 0.36, y: 0.80 }, { x: 0.56, y: 0.80 },  // เข่า
+      { x: 0.30, y: 0.06 }, { x: 0.62, y: 0.06 },
+      { x: 0.46, y: 0.22 },
+      { x: 0.28, y: 0.37 }, { x: 0.65, y: 0.37 },
+      { x: 0.22, y: 0.60 }, { x: 0.73, y: 0.60 },
+      { x: 0.46, y: 0.54 },
+      { x: 0.36, y: 0.80 }, { x: 0.56, y: 0.80 },
     ];
-    const r = 4; // รัศมีจุด (px)
+    const r = 4;
     return P.map((p, i) => ({
       key: String(i),
       style: {
@@ -85,7 +85,7 @@ export default function Home() {
           <ThemedText style={styles.ctaText}>PERSONALIZED PLAN</ThemedText>
         </Pressable>
 
-        {/* ===== Progress (มินิกราฟ) ===== */}
+        {/* ===== Progress ===== */}
         <ThemedText type="subtitle" style={styles.sectionTitle}>PROGRESS</ThemedText>
         <ThemedView style={styles.chartBox}>
           <View style={styles.grid} />
@@ -96,7 +96,7 @@ export default function Home() {
         </ThemedView>
       </ScrollView>
 
-      {/* ===== Bottom Nav (fixed + safe area) ===== */}
+      {/* ===== Bottom Nav ===== */}
       <SafeAreaView edges={['bottom']} style={styles.tabSafe}>
         <ThemedView style={styles.tabBar}>
           <Link href="/" asChild>
@@ -120,7 +120,6 @@ export default function Home() {
   );
 }
 
-/* ===== Helpers ===== */
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.infoItem}>
@@ -130,61 +129,30 @@ function Info({ label, value }: { label: string; value: string }) {
   );
 }
 
-/* ===== Styles ===== */
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#fff' },
   content: { padding: 16 },
-
-  headerRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginBottom: 6,
-  },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
   appTitle: { letterSpacing: 1 },
   menuBtn: { padding: 8 },
   menuIcon: { fontSize: 22 },
-
-  heroBox: {
-    borderRadius: 16, overflow: 'hidden', backgroundColor: '#eef6ff',
-    marginBottom: 12, position: 'relative', aspectRatio: 16 / 9, // สูงตามสัดส่วน
-  },
+  heroBox: { borderRadius: 16, overflow: 'hidden', backgroundColor: '#eef6ff', marginBottom: 12, position: 'relative', aspectRatio: 16 / 9 },
   bodyImg: { width: '100%', height: '100%' },
-  dot: {
-    position: 'absolute', width: 8, height: 8, borderRadius: 4,
-    backgroundColor: '#2563eb', borderWidth: 2, borderColor: '#fff',
-  },
-
+  dot: { position: 'absolute', width: 8, height: 8, borderRadius: 4, backgroundColor: '#2563eb', borderWidth: 2, borderColor: '#fff' },
   sectionTitle: { marginTop: 8 },
-
-  analysisBox: {
-    backgroundColor: '#f1f5f9', borderRadius: 14, padding: 12,
-    flexDirection: 'row', justifyContent: 'space-between', gap: 8,
-  },
+  analysisBox: { backgroundColor: '#f1f5f9', borderRadius: 14, padding: 12, flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   infoItem: { flex: 1, alignItems: 'center' },
   infoLabel: { fontSize: 12, opacity: 0.7 },
   infoValue: { fontSize: 16, fontWeight: '700' },
-
-  ctaBtn: {
-    marginTop: 10, borderRadius: 10, paddingVertical: 12,
-    alignItems: 'center',
-  },
+  ctaBtn: { marginTop: 10, borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
   blue: { backgroundColor: '#3b82f6' },
   green: { backgroundColor: '#10b981' },
   ctaText: { color: '#fff', fontWeight: '700' },
-
-  chartBox: {
-    height: 120, borderRadius: 14, overflow: 'hidden',
-    borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#fff',
-    marginTop: 8, marginBottom: 16,
-  },
+  chartBox: { height: 120, borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#fff', marginTop: 8, marginBottom: 16 },
   grid: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   lineSeg: { position: 'absolute', height: 2, backgroundColor: '#0f172a', borderRadius: 2 },
-
   tabSafe: { backgroundColor: '#fff' },
-  tabBar: {
-    flexDirection: 'row', justifyContent: 'space-around',
-    paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#e2e8f0',
-    backgroundColor: '#fff',
-  },
+  tabBar: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#e2e8f0', backgroundColor: '#fff' },
   tabItem: { paddingHorizontal: 8 },
   tabIcon: { fontSize: 20, color: '#94a3b8' },
   active: { color: '#2563eb' },

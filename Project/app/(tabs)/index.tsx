@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { Link, usePathname, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View, ScrollView, LayoutChangeEvent } from 'react-native';
+import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -13,7 +13,7 @@ export default function Home() {
   const insets = useSafeAreaInsets();
 
   // mock data
-  const metrics = { weight: '170 lbs', height: `5'9"`, bmi: '24.3', body: '22%' };
+  const metrics = { weight: '180 lbs', height: `5'9"`, bmi: '24.3', body: '22%' };
 
   // ====== ทำ DOT ให้สเกลตามรูป ======
   const [heroSize, setHeroSize] = useState({ w: 0, h: 0 });

@@ -14,7 +14,7 @@ export default function Home() {
   const insets = useSafeAreaInsets();
 
   // mock data
-  const metrics = { weight: '170 lbs', height: `5'9"`, bmi: '24.3', body: '22%' };
+  const metrics = { weight: '180lbs', height: `5'9"`, bmi: '24.3', body: '22%' };
 
   const [heroSize, setHeroSize] = useState({ w: 0, h: 0 });
   const onHeroLayout = (e: LayoutChangeEvent) => {

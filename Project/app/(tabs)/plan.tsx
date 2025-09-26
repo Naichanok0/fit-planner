@@ -1,10 +1,16 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 
 export default function Plan() {
   return (
-    <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <ThemedText type="title">Plan Screen</ThemedText>
-    </ThemedView>
+    <SafeAreaView style={styles.screen}>
+      <ThemedText type="title">Personalized Plan</ThemedText>
+      <ThemedText>Workout and Nutrition plans will go here 🥗🏋️</ThemedText>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, padding: 16, backgroundColor: '#fff' },
+});

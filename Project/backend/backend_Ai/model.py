@@ -11,3 +11,4 @@ def create_model():
     return model
 
 base_model = create_model()
+preprocess_fn = tf.keras.applications.mobilenet_v2.preprocess_input 

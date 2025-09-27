@@ -1,3 +1,4 @@
+# backend_Ai/main.py
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
@@ -28,7 +29,7 @@ async def startup_event():
     load_dataset()
 
 def load_dataset():
-    global embeddings, image_paths
+    global embeddings, image_paths, index
     embeddings = []
     image_paths = []
 
@@ -40,7 +41,6 @@ def load_dataset():
                 image_paths.append(file)
 
     embeddings = np.array(embeddings).astype("float32")
-    global index
     index = faiss.IndexFlatL2(embeddings.shape[1])
     index.add(embeddings)
     print(f"✅ Loaded {len(embeddings)} embeddings.")

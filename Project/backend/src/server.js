@@ -1,12 +1,20 @@
-// server.js
+// server.js  (DROP-IN REPLACEMENT)
+// ========== BOOT ==========
 require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2/promise');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+// (ถ้าต้องการให้ frontend ทดสอบข้าม origin ได้ง่าย)
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
+app.use(helmet());
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
+app.use(cors({ origin: '*', credentials: true })); // ปรับ origin ตามโดเมน frontend ของคุณ
 
-// ---------- MySQL Pool ----------
+// ========== DB POOL ==========
 const pool = mysql.createPool({
   host: process.env.DB_HOST || '127.0.0.1',
   port: Number(process.env.DB_PORT || 3306),
@@ -18,7 +26,7 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-// helper: run query with prepared statements
+// helper: prepared query
 async function q(sql, params = []) {
   const conn = await pool.getConnection();
   try {
@@ -29,15 +37,14 @@ async function q(sql, params = []) {
   }
 }
 
-// ---------- Utils ----------
-/** map MySQL DAYOFWEEK => 1=Mon..7=Sun */
+// ========== UTILS ==========
+/** map JS 0..6(Sun..Sat) -> 1..7(Mon..Sun) */
 function todayDowMon1() {
-  // JS: 0=Sun..6=Sat → mapให้เป็น 1=Mon..7=Sun
   const jsDay = new Date().getDay(); // 0..6
   return ((jsDay + 6) % 7) + 1; // 1..7
 }
 
-/** simple required check */
+// ถ้าจะใช้ตรวจ param ฝั่ง body (ตอนนี้เราเลิกใช้ userId แล้ว)
 function requireParam(value, name) {
   if (value === undefined || value === null || value === '') {
     const err = new Error(`Missing required: ${name}`);
@@ -46,14 +53,29 @@ function requireParam(value, name) {
   }
 }
 
-// ---------- Routes ----------
+// ========== AUTH ==========
+const authRoutes = require('./routes/auth');        // สมัคร / ล็อกอิน / รีเฟรช / ล็อกเอาต์
+const { authRequired } = require('./middleware/auth'); // middleware ตรวจ JWT
 
-// Health check
+// ========== ROUTES ==========
+
+// Health (Frontend: ใช้เช็คว่าบริการขึ้นไหม)
 app.get('/health', (req, res) => {
   res.json({ ok: true, service: 'FitLife Planner API' });
 });
 
-// 1) Exercises (รายการท่าออกกำลังกาย)
+// Auth Routes
+// FRONTEND:
+// - POST /auth/register  -> สมัคร, รับ {user, access, refresh}
+// - POST /auth/login     -> ล็อกอิน, รับ {user, access, refresh}
+// - POST /auth/refresh   -> รับ access ใหม่ เมื่อ 401
+// - POST /auth/logout    -> ล็อกเอาต์ (ลบ refresh server-side)
+app.use('/auth', authRoutes(q));
+
+// ========== BUSINESS ROUTES ==========
+
+// 1) Exercises (แคตาล็อกท่าออกกำลังกาย)
+// FRONTEND: GET /exercises (public หรือจะล็อกอินก็ได้ ถ้าต้องการให้ user เฉพาะเห็น ให้ใส่ authRequired)
 app.get('/exercises', async (req, res, next) => {
   try {
     const rows = await q(
@@ -62,17 +84,14 @@ app.get('/exercises', async (req, res, next) => {
        ORDER BY name`
     );
     res.json(rows);
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 });
 
-// 2) Active plan ของผู้ใช้ (Q1)
-app.get('/plans/active', async (req, res, next) => {
+// 2) Active plan ของ "ผู้ใช้ที่ล็อกอินอยู่"
+// FRONTEND: GET /plans/active  + Header: Authorization: Bearer <access>
+app.get('/plans/active', authRequired, async (req, res, next) => {
   try {
-    const userId = Number(req.query.userId);
-    requireParam(userId, 'userId');
-
+    const userId = req.user.id; // << เปลี่ยนจาก ?userId= มาใช้ JWT
     const rows = await q(
       `SELECT id AS planId, title
        FROM workout_plans
@@ -80,23 +99,16 @@ app.get('/plans/active', async (req, res, next) => {
        LIMIT 1`,
       [userId]
     );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ message: 'No active plan' });
-    }
+    if (rows.length === 0) return res.status(404).json({ message: 'No active plan' });
     res.json(rows[0]);
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 });
 
-// 3) ท่าออกกำลังของ "วันนี้" (Q2)
-app.get('/workouts/today', async (req, res, next) => {
+// 3) ท่าออกกำลังของ "วันนี้" สำหรับผู้ใช้ที่ล็อกอิน
+// FRONTEND: GET /workouts/today  + Header: Authorization: Bearer <access>
+app.get('/workouts/today', authRequired, async (req, res, next) => {
   try {
-    const userId = Number(req.query.userId);
-    requireParam(userId, 'userId');
-
-    // เราใช้ฝั่ง JS คำนวณ day_of_week แบบ 1=Mon..7=Sun เพื่อ cache/ทดสอบง่าย
+    const userId = req.user.id;
     const dow = todayDowMon1();
 
     const rows = await q(
@@ -120,16 +132,14 @@ app.get('/workouts/today', async (req, res, next) => {
     );
 
     res.json({ dayOfWeek: dow, items: rows });
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 });
 
-// 4) ดึงทั้งสัปดาห์ (เสริมจาก Q2)
-app.get('/workouts/week', async (req, res, next) => {
+// 4) ดึงทั้งสัปดาห์
+// FRONTEND: GET /workouts/week  + Header: Authorization: Bearer <access>
+app.get('/workouts/week', authRequired, async (req, res, next) => {
   try {
-    const userId = Number(req.query.userId);
-    requireParam(userId, 'userId');
+    const userId = req.user.id;
 
     const rows = await q(
       `SELECT i.day_of_week   AS dayOfWeek,
@@ -150,7 +160,6 @@ app.get('/workouts/week', async (req, res, next) => {
       [userId]
     );
 
-    // group by day_of_week เป็น JSON
     const byDay = {};
     for (const r of rows) {
       if (!byDay[r.dayOfWeek]) byDay[r.dayOfWeek] = [];
@@ -166,26 +175,25 @@ app.get('/workouts/week', async (req, res, next) => {
       });
     }
     res.json(byDay);
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 });
 
-// 5) บันทึกผลการทำจริง (Q3)
-app.post('/sessions', async (req, res, next) => {
+// 5) บันทึกผลการทำจริง (Session/Workout log)
+// FRONTEND: POST /sessions  + Header: Authorization: Bearer <access>
+// body: { exerciseId, sets?, reps?, durationMin?, calories?, notes?, performedAt? }
+app.post('/sessions', authRequired, async (req, res, next) => {
   try {
+    const userId = req.user.id;
     const {
-      userId,
       exerciseId,
       sets = null,
       reps = null,
       durationMin = null,
       calories = null,
       notes = null,
-      performedAt = null, // optional: YYYY-MM-DD HH:mm:ss (ถ้าไม่ส่งมา จะใช้ NOW())
+      performedAt = null, // 'YYYY-MM-DD HH:mm:ss' ถ้าไม่ส่ง จะใช้ NOW()
     } = req.body;
 
-    requireParam(userId, 'userId');
     requireParam(exerciseId, 'exerciseId');
 
     const sql = performedAt
@@ -202,17 +210,14 @@ app.post('/sessions', async (req, res, next) => {
 
     const result = await q(sql, params);
     res.status(201).json({ ok: true, sessionId: result.insertId });
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 });
 
-// 6) Progress สำหรับกราฟ (Q4)
-app.get('/progress', async (req, res, next) => {
+// 6) Progress กราฟ น้ำหนัก/BMI ของผู้ใช้ที่ล็อกอิน
+// FRONTEND: GET /progress  + Header: Authorization: Bearer <access>
+app.get('/progress', authRequired, async (req, res, next) => {
   try {
-    const userId = Number(req.query.userId);
-    requireParam(userId, 'userId');
-
+    const userId = req.user.id;
     const rows = await q(
       `SELECT measure_date AS date,
               weight_kg    AS weightKg,
@@ -222,23 +227,18 @@ app.get('/progress', async (req, res, next) => {
        ORDER BY measure_date`,
       [userId]
     );
-
     res.json(rows);
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 });
 
-// ---------- Error Handler ----------
+// ========== ERROR ==========
 app.use((err, req, res, next) => {
   console.error(err);
   const code = err.status || 500;
-  res.status(code).json({
-    error: err.message || 'Internal Server Error',
-  });
+  res.status(code).json({ error: err.message || 'Internal Server Error' });
 });
 
-// ---------- Start ----------
+// ========== START ==========
 const port = Number(process.env.PORT || 3000);
 app.listen(port, () => {
   console.log(`✅ FitLife Planner API running on http://localhost:${port}`);

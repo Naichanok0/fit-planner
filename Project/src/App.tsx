@@ -115,7 +115,7 @@ function MainApp() {
                 <Brain className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">AI Health App</h1>
+                <h1 className="text-xl font-bold">Fitlife planner</h1>
                 <p className="text-sm text-muted-foreground">
                   AI-powered body analysis and personalized programs
                 </p>

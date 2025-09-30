@@ -1,0 +1,144 @@
+[
+  {
+    "image": "men/1.png",
+    "label": "ชายรูปร่างสมส่วน",
+    "goal": "muscle-gain",
+    "fitnessLevel": "beginner",
+    "tags": ["beginner", "muscle-gain", "high-protein"],
+    "weeklySchedule": [
+      {
+        "day": "Monday",
+        "workout": {
+          "id": "day1",
+          "name": "วันที่ 1: Upper Body Strength",
+          "duration": 45,
+          "difficulty": "beginner",
+          "targetMuscles": ["หน้าอก", "ไหล่", "แขน"],
+          "estimatedCalories": 350,
+          "exercises": [
+            {
+              "name": "Push-ups",
+              "sets": 3,
+              "reps": "8-12",
+              "rest": 60,
+              "description": "การวิดพื้นมาตรฐาน เน้นท่าทางที่ถูกต้อง"
+            },
+            {
+              "name": "Pike Push-ups",
+              "sets": 3,
+              "reps": "6-10",
+              "rest": 60,
+              "description": "วิดพื้นท่าสามเหลี่ยม เน้นกล้ามเนื้อไหล่"
+            },
+            {
+              "name": "Tricep Dips",
+              "sets": 3,
+              "reps": "8-12",
+              "rest": 60,
+              "description": "ใช้เก้าอี้หรือขอบเตียง เน้นกล้ามเนื้อไตรเซ็ปส์"
+            },
+            {
+              "name": "Plank",
+              "sets": 3,
+              "reps": "30-60 วินาที",
+              "rest": 45,
+              "description": "ท่าแป้นกบ เสริมสร้างกล้ามเนื้อหลัก"
+            }
+          ],
+          "note": "โฟกัสที่ฟอร์มและการหายใจ"
+        },
+        "meals": [
+          {
+            "id": "breakfast",
+            "name": "อาหารเช้า",
+            "time": "07:00",
+            "nutrition": { "calories": 400, "protein": 25, "carbs": 45, "fat": 12, "fiber": 6, "water": 1.5 },
+            "foods": ["ข้าวโอ๊ต 1 ถ้วย", "นมไขมันต่ำ 200ml", "กล้วยหอม 1 ผล", "อัลมอนด์ 10 เม็ด"],
+            "note": "เน้นโปรตีนและไฟเบอร์"
+          },
+          {
+            "id": "lunch",
+            "name": "อาหารเที่ยง",
+            "time": "12:30",
+            "nutrition": { "calories": 500, "protein": 35, "carbs": 50, "fat": 18, "fiber": 8, "water": 2 },
+            "foods": ["ข้าวกล้อง 3/4 ถ้วย", "ปลาแซลมอนย่าง 120g", "ผักรวม 1 ถ้วย", "น้ำมันมะกอก 1 ช้อนชา"]
+          },
+          {
+            "id": "dinner",
+            "name": "อาหารเย็น",
+            "time": "18:30",
+            "nutrition": { "calories": 450, "protein": 30, "carbs": 35, "fat": 20, "fiber": 5, "water": 1.5 },
+            "foods": ["ข้าวขาว 1/2 ถ้วย", "ไก่ย่าง 100g", "ผักต้มนึ่ง 1 ถ้วย", "อะโวคาโด 1/4 ผล"]
+          }
+        ],
+        "water": 2.5,
+        "note": "ดื่มน้ำให้ครบตามเป้า"
+      },
+      {
+        "day": "Tuesday",
+        "workout": {
+          "id": "day2",
+          "name": "วันที่ 2: Lower Body Power",
+          "duration": 40,
+          "difficulty": "beginner",
+          "targetMuscles": ["ขา", "สะโพก", "ก้น"],
+          "estimatedCalories": 320,
+          "exercises": [
+            {
+              "name": "Squats",
+              "sets": 3,
+              "reps": "12-20",
+              "rest": 60,
+              "description": "การนั่งยอง เน้นเทคนิคที่ถูกต้อง"
+            },
+            {
+              "name": "Lunges",
+              "sets": 3,
+              "reps": "10-15 แต่ละข้าง",
+              "rest": 60,
+              "description": "การก้าวขาไปข้างหน้า เน้นความสมดุล"
+            },
+            {
+              "name": "Glute Bridges",
+              "sets": 3,
+              "reps": "15-20",
+              "rest": 45,
+              "description": "ยกสะโพก เน้นกล้ามเนื้อก้น"
+            },
+            {
+              "name": "Calf Raises",
+              "sets": 3,
+              "reps": "15-25",
+              "rest": 30,
+              "description": "ยกส้นเท้า เสริมสร้างกล้ามเนื้อน่อง"
+            }
+          ]
+        },
+        "meals": [
+          {
+            "id": "breakfast",
+            "name": "อาหารเช้า",
+            "time": "07:00",
+            "nutrition": { "calories": 380, "protein": 22, "carbs": 40, "fat": 10, "fiber": 5, "water": 1.2 },
+            "foods": ["ขนมปังโฮลวีต 2 แผ่น", "ไข่คน 2 ฟอง", "แอปเปิ้ล 1 ผล"]
+          },
+          {
+            "id": "lunch",
+            "name": "อาหารเที่ยง",
+            "time": "12:30",
+            "nutrition": { "calories": 480, "protein": 32, "carbs": 55, "fat": 15, "fiber": 7, "water": 2 },
+            "foods": ["ข้าวกล้อง 1 ถ้วย", "อกไก่ย่าง 100g", "ผักสด 1 ถ้วย"]
+          },
+          {
+            "id": "dinner",
+            "name": "อาหารเย็น",
+            "time": "18:30",
+            "nutrition": { "calories": 420, "protein": 28, "carbs": 30, "fat": 18, "fiber": 6, "water": 1.3 },
+            "foods": ["ข้าวโพดต้ม 1 ฝัก", "ปลานึ่ง 100g", "ผักลวก 1 ถ้วย"]
+          }
+        ]
+      }
+      // ... เพิ่มข้อมูลสำหรับวันอื่นๆ ให้ครบ 7 วันในรูปแบบเดียวกัน
+    ]
+  }
+]

@@ -288,17 +288,52 @@ export function BodyAnalysis({
       generateWorkoutProgram(mockResults);
     }, 1000);
   };
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+  const [backendResult, setBackendResult] = useState<any>(null);
+
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setSelectedImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const file = event.target.files?.[0];
+  if (file) {
+    setUploadedFile(file); // เก็บไฟล์ไว้
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setSelectedImage(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+};
+  const callBackendDetect = async () => {
+  if (!uploadedFile) {
+    alert('กรุณาอัปโหลดรูปก่อน');
+    return;
+  }
+  const formData = new FormData();
+  formData.append('file', uploadedFile);
+  // เพิ่ม gender ถ้ามี เช่น formData.append('gender', 'men');
+  try {
+    const res = await fetch('http://localhost:8000/detect/', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    setBackendResult(data);
+    // สามารถนำ data.match_image, data.workout_plan ไปใช้งานต่อได้
+  } catch (err) {
+    alert('เกิดข้อผิดพลาดในการเชื่อมต่อ backend');
+  }
+};
+
+  <Button onClick={callBackendDetect} disabled={!uploadedFile}>
+  ส่งรูปไป AI Backend
+</Button>
+  
+  {backendResult && (
+  <div className="mt-4 p-2 border rounded">
+    <div>ผลลัพธ์จาก AI: {JSON.stringify(backendResult)}</div>
+  </div>
+)} 
 
   const getBMICategory = (bmi: number) => {
     if (bmi < 18.5) return { category: 'Underweight', color: 'text-blue-600' };

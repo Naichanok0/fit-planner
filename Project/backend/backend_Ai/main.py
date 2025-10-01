@@ -5,13 +5,23 @@ import uvicorn
 import numpy as np
 import os
 import faiss
+<<<<<<< HEAD
 from fastapi.responses import JSONResponse
 import json
+=======
+import cv2
+from typing import Optional
+>>>>>>> 80c626bce4531287b5228fe402b11cd8db6600d1
 
-from model import base_model, preprocess_fn
-from utils import get_embedding_tta
+from .model import base_model, preprocess_fn
+from .utils import get_embedding_tta, estimate_chest_circumference_cm
+from .detector import BodyDetector
+from .validators import (
+    is_full_body_landmarks, frontal_pose_ok, arms_clear_torso,
+    body_height_norm, chest_line_points, L_SHOULDER, R_SHOULDER, L_HIP, R_HIP
+)
 
-app = FastAPI(title="Body Image Retrieval API")
+app = FastAPI(title="Body Image Retrieval + Chest API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,11 +45,28 @@ emb_women = None
 paths_women = []
 index_women = None
 
+# Pose detector (ใช้ซ้ำ)
+pose_detector: Optional[BodyDetector] = None
+
 
 @app.on_event("startup")
 async def startup_event():
+    global pose_detector
     print("🔄 Loading dataset embeddings...")
     load_dataset()
+    print("🔄 Initializing BodyDetector...")
+    pose_detector = BodyDetector(
+        model_complexity=1,
+        enable_segmentation=False,
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5,
+        smooth_landmarks=True,
+    )
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    if pose_detector is not None:
+        pose_detector.close()
 
 
 def _g_from_rel(rel_path: str) -> str:
@@ -63,9 +90,8 @@ def load_dataset():
     global emb_men, paths_men, index_men
     global emb_women, paths_women, index_women
 
-    # 1) เดินอ่านรูปแบบ recursive → ทำ TTA + preprocess → ได้เวกเตอร์
     vecs_all = []
-    paths_all = []
+    paths_all_local = []
 
     for root, _, files in os.walk(DATASET_DIR):
         for file in files:
@@ -77,7 +103,7 @@ def load_dataset():
                     with open(full_path, "rb") as f:
                         emb = get_embedding_tta(base_model, f.read(), preprocess_fn=preprocess_fn)
                     vecs_all.append(emb)
-                    paths_all.append(rel_path)
+                    paths_all_local.append(rel_path)
                 except Exception as e:
                     print(f"[skip] {rel_path}: {e}")
 
@@ -89,32 +115,31 @@ def load_dataset():
         index_men = _faiss_index_from_matrix(emb_men)
         emb_women = np.zeros((0, 1280), dtype="float32")
         index_women = _faiss_index_from_matrix(emb_women)
+        paths_men[:] = []
+        paths_women[:] = []
         print("⚠️  No images found in dataset/")
         return
 
     emb_all = np.asarray(vecs_all, dtype="float32")
-
-    # 2) Normalize ทั้งชุด (ให้ระยะอยู่ช่วง 0..2 และเทียบด้วย cosine ได้)
     faiss.normalize_L2(emb_all)
+    paths_all[:] = paths_all_local
 
-    # 3) แยก subset ตาม gender โฟลเดอร์ชั้นแรก
+    # แยก subset ตามโฟลเดอร์
     men_indices = [i for i, p in enumerate(paths_all) if _g_from_rel(p) == "men"]
     women_indices = [i for i, p in enumerate(paths_all) if _g_from_rel(p) == "women"]
 
     emb_men = emb_all[men_indices] if men_indices else np.zeros((0, emb_all.shape[1]), dtype="float32")
-    paths_men = [paths_all[i] for i in men_indices]
+    paths_men[:] = [paths_all[i] for i in men_indices]
 
     emb_women = emb_all[women_indices] if women_indices else np.zeros((0, emb_all.shape[1]), dtype="float32")
-    paths_women = [paths_all[i] for i in women_indices]
+    paths_women[:] = [paths_all[i] for i in women_indices]
 
-    # 4) สร้าง index แยก 3 ชุด
+    # สร้าง index แยก 3 ชุด
     index_all = _faiss_index_from_matrix(emb_all)
     index_men = _faiss_index_from_matrix(emb_men)
     index_women = _faiss_index_from_matrix(emb_women)
 
-    print(
-        f"✅ Loaded: all={len(paths_all)}, men={len(paths_men)}, women={len(paths_women)}, dim={emb_all.shape[1]}"
-    )
+    print(f"✅ Loaded: all={len(paths_all)}, men={len(paths_men)}, women={len(paths_women)}, dim={emb_all.shape[1]}")
 
 
 def _search_and_rerank(q: np.ndarray, X: np.ndarray, paths: list, index: faiss.IndexFlatL2):
@@ -146,27 +171,57 @@ def _search_and_rerank(q: np.ndarray, X: np.ndarray, paths: list, index: faiss.I
     dist = dist_map.get(best_idx, float(D[0][0]))
     return rel_path, dist
 
+# ------------------------------
+# Pose only (วิเคราะห์ท่าทาง)
+# ------------------------------
+@app.post("/pose/")
+async def pose(file: UploadFile = File(...)):
+    if pose_detector is None:
+        raise HTTPException(status_code=500, detail="Pose detector ยังไม่พร้อม")
 
+    image_bytes = await file.read()
+    data = np.frombuffer(image_bytes, np.uint8)
+    frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
+    if frame is None:
+        raise HTTPException(status_code=400, detail="อ่านรูปไม่สำเร็จ")
+
+    res = pose_detector.process_bgr(frame)
+    if not res.ok or res.landmarks is None:
+        return {"ok": False, "message": "ไม่พบ pose ที่ใช้งานได้ (ตรวจไม่ครบจุดสำคัญ)"}
+
+    lm = res.landmarks.landmark
+    full_ok = is_full_body_landmarks(lm)
+    front_ok = frontal_pose_ok(lm)
+    arms_ok = arms_clear_torso(lm)
+    h_norm = body_height_norm(lm)
+
+    return {
+        "ok": True,
+        "shape": res.shape,
+        "widths": res.widths,
+        "quality": {
+            "full_body_ok": full_ok,
+            "frontal_ok": front_ok,
+            "arms_clear_torso": arms_ok,
+            "body_height_norm": h_norm,
+        },
+    }
+
+# ------------------------------
+# Retrieval only (ค้นหารูปคล้าย)
+# ------------------------------
 @app.post("/detect/")
 async def detect(
     file: UploadFile = File(...),
-    gender: str | None = Form(default=None, description="เลือก men หรือ women; ถ้าเว้นว่าง = ค้นหาทั้งหมด"),
+    gender: str | None = Form(default=None, description="men / women; เว้นว่าง = ค้นหาทั้งหมด"),
 ):
-    """
-    อัปโหลดรูป + (ตัวเลือก) เพศ:
-    - gender = 'men'   → ค้นหาเฉพาะ dataset/men/*
-    - gender = 'women' → ค้นหาเฉพาะ dataset/women/*
-    - ไม่ระบุ          → ค้นหาทั้งหมด
-    """
     if emb_all is None or index_all is None:
         raise HTTPException(status_code=500, detail="Index ยังไม่พร้อม กรุณารีสตาร์ทหรือรอโหลด dataset")
 
-    # อ่านรูปและฝั่ง query embedding (TTA + preprocess)
     image_bytes = await file.read()
     q = get_embedding_tta(base_model, image_bytes, preprocess_fn=preprocess_fn).astype("float32").reshape(1, -1)
     faiss.normalize_L2(q)
 
-    # เลือก subset ตาม gender
     subset = (gender or "").strip().lower()
     if subset == "men":
         if len(paths_men) == 0:
@@ -177,12 +232,10 @@ async def detect(
             raise HTTPException(status_code=400, detail="ไม่มีรูปในกลุ่ม women")
         rel_path, dist = _search_and_rerank(q, emb_women, paths_women, index_women)
     else:
-        # ค้นหาทั้งหมด
         if len(paths_all) == 0:
             raise HTTPException(status_code=400, detail="Dataset ว่าง")
         rel_path, dist = _search_and_rerank(q, emb_all, paths_all, index_all)
 
-    # ระบุ gender ของภาพที่แมตช์ (จากโฟลเดอร์)
     g = _g_from_rel(rel_path) if _g_from_rel(rel_path) in ("men", "women") else "unknown"
 
     return {
@@ -191,6 +244,126 @@ async def detect(
         "distance": dist,            # 0..2 ยิ่งต่ำยิ่งใกล้
         "workout_plan": f"Plan for {rel_path}",
     }
+
+# ------------------------------
+# Chest (ภาพเดียว + ส่วนสูง/น้ำหนักที่ผู้ใช้กรอก)
+# ------------------------------
+@app.post("/chest/")
+async def chest_measure(
+    file: UploadFile = File(...),
+    height_cm: float = Form(...),           # ผู้ใช้กรอก
+    weight_kg: float = Form(...),           # ผู้ใช้กรอก
+    gender: str | None = Form(None),        # 'men' / 'women' / เว้นว่าง
+    chest_level: float = Form(0.33),        # 0.30-0.40 ปรับตามภาพ
+    fixed_depth_ratio: float | None = Form(None),  # ถ้าอยากบังคับ ratio เอง
+):
+    if pose_detector is None:
+        raise HTTPException(status_code=500, detail="Pose detector ยังไม่พร้อม")
+
+    image_bytes = await file.read()
+    frame = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
+    if frame is None:
+        raise HTTPException(status_code=400, detail="อ่านรูปไม่สำเร็จ")
+
+    res = pose_detector.process_bgr(frame)
+    if not res.ok or res.landmarks is None:
+        return {"ok": False, "message": "ตรวจ landmark ไม่ครบพอสำหรับการวัด (ลองยืนเต็มตัว/ยืนตรง)"}
+
+    h, w = frame.shape[:2]
+    out = estimate_chest_circumference_cm(
+        lm=res.landmarks.landmark,
+        img_w=w, img_h=h,
+        height_cm=height_cm,
+        weight_kg=weight_kg,
+        gender=gender,
+        body_height_norm_fn=body_height_norm,
+        chest_level=chest_level,
+        side_depth_cm=None,
+        fixed_depth_ratio=fixed_depth_ratio,
+    )
+    return out
+
+# ------------------------------
+# Chest แบบสองภาพ (หน้าตรง + ด้านข้าง) — แม่นขึ้น
+# ------------------------------
+@app.post("/chest2/")
+async def chest_front_and_side(
+    file_front: UploadFile = File(...),
+    file_side: UploadFile = File(...),
+    height_cm: float = Form(...),
+    weight_kg: float = Form(...),
+    gender: str | None = Form(None),
+    chest_level: float = Form(0.33),
+):
+    if pose_detector is None:
+        raise HTTPException(status_code=500, detail="Pose detector ยังไม่พร้อม")
+
+    # ------ FRONT ------
+    b_front = await file_front.read()
+    f_front = cv2.imdecode(np.frombuffer(b_front, np.uint8), cv2.IMREAD_COLOR)
+    if f_front is None:
+        raise HTTPException(status_code=400, detail="อ่านรูป front ไม่สำเร็จ")
+    hF, wF = f_front.shape[:2]
+    rF = pose_detector.process_bgr(f_front)
+    if not rF.ok or rF.landmarks is None:
+        return {"ok": False, "message": "front: pose ไม่ครบ"}
+
+    # หาค่า scale และ width_cm จาก front
+    tmp = estimate_chest_circumference_cm(
+        lm=rF.landmarks.landmark,
+        img_w=wF, img_h=hF,
+        height_cm=height_cm,
+        weight_kg=weight_kg,
+        gender=gender,
+        body_height_norm_fn=body_height_norm,
+        chest_level=chest_level,
+        side_depth_cm=None,
+    )
+    if not tmp.get("ok"):
+        return tmp
+    cm_per_px = tmp["cm_per_px"]
+
+    # หา y ระดับอกในภาพ front เพื่อใช้กับภาพ side
+    Lf, Rf = chest_line_points(rF.landmarks.landmark, wF, hF, level=chest_level)
+    chest_y_front = (Lf[1] + Rf[1]) / 2.0 if (Lf and Rf) else hF * (0.2 + 0.6 * chest_level)
+
+    # ------ SIDE ------
+    b_side = await file_side.read()
+    f_side = cv2.imdecode(np.frombuffer(b_side, np.uint8), cv2.IMREAD_COLOR)
+    if f_side is None:
+        raise HTTPException(status_code=400, detail="อ่านรูป side ไม่สำเร็จ")
+    hS, wS = f_side.shape[:2]
+    rS = pose_detector.process_bgr(f_side)
+    if not rS.ok or rS.landmarks is None:
+        return {"ok": False, "message": "side: pose ไม่ครบ"}
+
+    # ประมาณความลึกทรวงอกจากภาพด้านข้างที่ y ใกล้ chest_y_front (heuristic)
+    y_px_side = int(min(max(chest_y_front / hF * hS, 0), hS - 1))
+    gray = cv2.cvtColor(f_side, cv2.COLOR_BGR2GRAY)
+    row = gray[y_px_side, :]
+    row = cv2.GaussianBlur(row, (9, 1), 0)
+    thr = np.percentile(row, 40)
+    mask = row < thr
+    if not mask.any():
+        side_depth_cm = None
+    else:
+        xs = np.where(mask)[0]
+        side_width_px = max(0, int(xs.max() - xs.min()))
+        side_depth_cm = side_width_px * cm_per_px
+
+    out = estimate_chest_circumference_cm(
+        lm=rF.landmarks.landmark,
+        img_w=wF, img_h=hF,
+        height_cm=height_cm,
+        weight_kg=weight_kg,
+        gender=gender,
+        body_height_norm_fn=body_height_norm,
+        chest_level=chest_level,
+        side_depth_cm=side_depth_cm,
+    )
+    out["front_chest_y_px"] = float(chest_y_front)
+    out["side_y_px_used"] = float(y_px_side)
+    return out
 
 
 @app.get("/metadata")

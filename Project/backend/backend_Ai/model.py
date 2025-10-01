@@ -6,9 +6,9 @@ def create_model():
         weights="imagenet",
         include_top=False,
         pooling="avg",
-        input_shape=(224, 224, 3)
+        input_shape=(224, 224, 3),
     )
     return model
 
 base_model = create_model()
-preprocess_fn = tf.keras.applications.mobilenet_v2.preprocess_input 
+preprocess_fn = tf.keras.applications.mobilenet_v2.preprocess_input

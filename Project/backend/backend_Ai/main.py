@@ -5,6 +5,8 @@ import uvicorn
 import numpy as np
 import os
 import faiss
+from fastapi.responses import JSONResponse
+import json
 
 from model import base_model, preprocess_fn
 from utils import get_embedding_tta
@@ -189,6 +191,16 @@ async def detect(
         "distance": dist,            # 0..2 ยิ่งต่ำยิ่งใกล้
         "workout_plan": f"Plan for {rel_path}",
     }
+
+
+@app.get("/metadata")
+def get_metadata():
+    metadata_path = os.path.join(DATASET_DIR, "metadata.json")
+    if not os.path.exists(metadata_path):
+        raise HTTPException(status_code=404, detail="metadata.json not found")
+    with open(metadata_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return JSONResponse(content=data)
 
 
 if __name__ == "__main__":

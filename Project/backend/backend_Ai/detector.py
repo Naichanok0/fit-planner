@@ -1,3 +1,4 @@
+# backend_Ai/detector.py
 from dataclasses import dataclass
 from typing import Optional, Dict, Any
 
@@ -46,7 +47,7 @@ class BodyDetector:
 
         lm = results.pose_landmarks.landmark
 
-        # ตรวจคุณภาพเฟรม: เต็มตัว/ยืนตรงไหม
+        # ตรวจคุณภาพเฟรม: เต็มตัว/ยืนตรงไหม (ใช้เป็น tag แจ้งเตือน)
         full_ok = is_full_body_landmarks(lm, require_ankles=False)
         front_ok = frontal_pose_ok(lm)
 

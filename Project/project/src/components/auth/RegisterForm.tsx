@@ -5,19 +5,10 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useAuth } from './AuthProvider';
-import { 
-  Mail, 
-  Lock, 
-  User, 
-  Calendar, 
-  Eye, 
-  EyeOff, 
-  AlertCircle, 
-  CheckCircle,
-  Target,
-  Activity,
-  Loader2
-} from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, AlertCircle, Activity, Loader2 } from 'lucide-react';
+
+type FitnessLevel = 'beginner' | 'intermediate' | 'advanced';
+type Goal = 'weight-loss' | 'muscle-gain' | 'maintenance';
 
 interface RegisterFormProps {
   onToggleMode: (mode: 'login' | 'register' | 'forgot-password') => void;
@@ -33,21 +24,21 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
     lastName: '',
     age: '',
     gender: '' as 'male' | 'female' | '',
-    fitnessLevel: 'standard' as 'standard',
-    goal: '' as 'weight-loss' | 'muscle-gain' | 'maintenance' | ''
+    fitnessLevel: 'beginner' as FitnessLevel, // default
+    goal: '' as Goal | ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [step, setStep] = useState(1); // Multi-step form
+  const [step, setStep] = useState(1);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const validateStep1 = () => {
-    if (!formData.email || !formData.password || !formData.confirmPassword || 
+    if (!formData.email || !formData.password || !formData.confirmPassword ||
         !formData.firstName || !formData.lastName || !formData.age) {
       setError('Please fill in all required fields');
       return false;
@@ -60,7 +51,8 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
       setError('Password must be at least 6 characters');
       return false;
     }
-    if (parseInt(formData.age) < 13 || parseInt(formData.age) > 100) {
+    const ageNum = parseInt(formData.age, 10);
+    if (isNaN(ageNum) || ageNum < 13 || ageNum > 100) {
       setError('Age must be between 13 and 100');
       return false;
     }
@@ -77,17 +69,13 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
 
   const handleNextStep = () => {
     setError('');
-    if (step === 1 && validateStep1()) {
-      setStep(2);
-    }
+    if (step === 1 && validateStep1()) setStep(2);
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    
     if (!validateStep2()) return;
-
     setIsLoading(true);
 
     try {
@@ -96,16 +84,13 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
         password: formData.password,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        age: parseInt(formData.age),
+        age: parseInt(formData.age, 10),
         gender: formData.gender as 'male' | 'female',
-        fitnessLevel: formData.fitnessLevel as 'standard',
-        goal: formData.goal as 'weight-loss' | 'muscle-gain' | 'maintenance'
+        fitnessLevel: formData.fitnessLevel as 'beginner' | 'intermediate' | 'advanced',
+        goal: formData.goal as Goal
       });
-      
-      if (!success) {
-        setError('Registration failed. Please try again.');
-      }
-    } catch (err) {
+      if (!success) setError('Registration failed. Please try again.');
+    } catch {
       setError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -115,15 +100,13 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-6">
-        {/* Logo/Brand */}
+        {/* Brand */}
         <div className="text-center">
           <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <img src="/logo.svg" alt="AI Health App Logo" className="w-8 h-8 text-primary-foreground" />
+            <img src="/logo.svg" alt="FitLife Planner Logo" className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold">Join AI Health App</h1>
-          <p className="text-muted-foreground">
-            Start your personalized fitness journey
-          </p>
+          <h1 className="text-2xl font-bold">Join FitLife Planner</h1>
+          <p className="text-muted-foreground">Start your personalized fitness journey</p>
         </div>
 
         <Card>
@@ -136,16 +119,16 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
               </div>
             </CardTitle>
           </CardHeader>
+
           <CardContent>
             {step === 1 ? (
               <div className="space-y-4">
-                {/* Personal Information */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <User className="w-4 h-4" />
                     <span>Personal Information</span>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">First Name</Label>
@@ -259,7 +242,6 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Fitness Profile */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Activity className="w-4 h-4" />
@@ -268,7 +250,7 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
 
                   <div className="space-y-2">
                     <Label>Gender</Label>
-                    <Select value={formData.gender} onValueChange={(value) => handleInputChange('gender', value)}>
+                    <Select value={formData.gender} onValueChange={(v) => handleInputChange('gender', v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select your gender" />
                       </SelectTrigger>
@@ -281,7 +263,7 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
 
                   <div className="space-y-2">
                     <Label>Fitness Level</Label>
-                    <Select value={formData.fitnessLevel} onValueChange={(value) => handleInputChange('fitnessLevel', value)}>
+                    <Select value={formData.fitnessLevel} onValueChange={(v) => handleInputChange('fitnessLevel', v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select your fitness level" />
                       </SelectTrigger>
@@ -295,7 +277,7 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
 
                   <div className="space-y-2">
                     <Label>Primary Goal</Label>
-                    <Select value={formData.goal} onValueChange={(value) => handleInputChange('goal', value)}>
+                    <Select value={formData.goal} onValueChange={(v) => handleInputChange('goal', v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select your primary goal" />
                       </SelectTrigger>
@@ -333,14 +315,9 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
               </form>
             )}
 
-            {/* Footer Link */}
             <div className="mt-6 text-center text-sm text-muted-foreground">
               Already have an account?{' '}
-              <button
-                type="button"
-                onClick={() => onToggleMode('login')}
-                className="text-primary hover:underline font-medium"
-              >
+              <button type="button" onClick={() => onToggleMode('login')} className="text-primary hover:underline font-medium">
                 Sign in
               </button>
             </div>

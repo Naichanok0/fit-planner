@@ -106,7 +106,7 @@ export function ForgotPasswordForm({ onToggleMode }: ForgotPasswordFormProps) {
           <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Brain className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold">Reset Password</h1>
+          <h1 className="text-2xl font-bold">FitLife Planner</h1>
           <p className="text-muted-foreground">
             Enter your email to receive a password reset link
           </p>

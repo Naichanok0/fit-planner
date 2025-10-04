@@ -49,9 +49,9 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
         {/* Logo/Brand */}
         <div className="text-center">
           <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <img src="/logo.svg" alt="AI Health App Logo" className="w-8 h-8 text-primary-foreground" />
+            <img src="/logo.svg" alt="FitLife Planner Logo" className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold">AI Health App</h1>
+          <h1 className="text-2xl font-bold">FitLife Planner</h1>
           <p className="text-muted-foreground">
             AI-powered body analysis and personalized programs
           </p>

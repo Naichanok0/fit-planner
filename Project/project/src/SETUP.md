@@ -1,4 +1,4 @@
-# 🏥 AI Health App - Setup Guide
+# 🏥 FitLife Planner - Setup Guide
 
 ## 📋 **Prerequisites**
 

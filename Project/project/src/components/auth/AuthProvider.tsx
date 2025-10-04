@@ -38,13 +38,9 @@ interface AuthContextType {
   apiFetch: <T = any>(path: string, init?: RequestInit) => Promise<T>;
 }
 
+const API_BASE = (import.meta as any).env?.VITE_API_BASE ?? 'http://localhost:3000';
 
-// === ปรับ URL ให้ตรงกับ backend ของคุณ ===
-const API_BASE =
-  (import.meta as any).env?.VITE_API_BASE ?? 'http://localhost:3000';
-
-
-const LS_USER = 'ai-health-user';
+const LS_USER = 'fitlife-user';
 const LS_AT = 'access_token';
 const LS_RT = 'refresh_token';
 
@@ -56,33 +52,18 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // โหลด user/token จาก localStorage
   const [user, setUser] = useState<User | null>(() => {
-    try {
-      const raw = localStorage.getItem(LS_USER);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
+    try { const raw = localStorage.getItem(LS_USER); return raw ? JSON.parse(raw) : null; }
+    catch { return null; }
   });
 
-  const saveUser = (u: User | null) => {
-    if (u) localStorage.setItem(LS_USER, JSON.stringify(u));
-    else localStorage.removeItem(LS_USER);
-  };
-  const saveTokens = (access?: string, refresh?: string) => {
-    if (access) localStorage.setItem(LS_AT, access);
-    if (refresh) localStorage.setItem(LS_RT, refresh);
-  };
-  const clearTokens = () => {
-    localStorage.removeItem(LS_AT);
-    localStorage.removeItem(LS_RT);
-  };
+  const saveUser = (u: User | null) => { if (u) localStorage.setItem(LS_USER, JSON.stringify(u)); else localStorage.removeItem(LS_USER); };
+  const saveTokens = (access?: string, refresh?: string) => { if (access) localStorage.setItem(LS_AT, access); if (refresh) localStorage.setItem(LS_RT, refresh); };
+  const clearTokens = () => { localStorage.removeItem(LS_AT); localStorage.removeItem(LS_RT); };
 
   const getAccess = () => localStorage.getItem(LS_AT) || '';
   const getRefresh = () => localStorage.getItem(LS_RT) || '';
 
-  // เรียกใช้กับ endpoint อื่น ๆ ในระบบ (auto-attach token + auto-refresh)
   const apiFetch = useCallback(async <T = any>(path: string, init: RequestInit = {}) => {
     const withAuth = (token: string) => ({
       ...init,
@@ -99,7 +80,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return (await res.json()) as T;
     }
 
-    // 401 → ขอ access token ใหม่ด้วย refresh
     const refresh = getRefresh();
     if (!refresh) throw new Error('Unauthorized');
 
@@ -110,7 +90,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (!r.ok) {
-      // refresh ใช้ไม่ได้แล้ว
       clearTokens();
       setUser(null);
       saveUser(null);
@@ -119,7 +98,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { access } = await r.json();
     saveTokens(access);
-    // retry อีกรอบด้วย access ใหม่
     res = await fetch(`${API_BASE}${path.startsWith('/') ? path : `/${path}`}`, withAuth(access));
     if (!res.ok) throw new Error((await res.text()) || res.statusText);
     return (await res.json()) as T;
@@ -133,8 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       });
       if (!r.ok) return false;
-
-      const data = await r.json(); // { user, access, refresh }
+      const data = await r.json();
       const u: User = {
         id: String(data.user.id),
         email: data.user.email,
@@ -147,13 +124,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         joinDate: data.user.joinDate ? new Date(data.user.joinDate) : undefined,
         lastLogin: new Date(),
       };
-      setUser(u);
-      saveUser(u);
-      saveTokens(data.access, data.refresh);
+      setUser(u); saveUser(u); saveTokens(data.access, data.refresh);
       return true;
-    } catch {
-      return false;
-    }
+    } catch { return false; }
   };
 
   const register = async (userData: RegisterData): Promise<boolean> => {
@@ -163,9 +136,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
       });
-      if (!r.ok) return false;
-
-      const data = await r.json(); // { user, access, refresh }
+      if (!r.ok) {
+        // อ่านข้อความ error เพื่อ debug ง่ายขึ้น
+        const err = await r.json().catch(() => ({}));
+        console.error('register failed:', err.error || r.statusText);
+        return false;
+      }
+      const data = await r.json();
       const u: User = {
         id: String(data.user.id),
         email: data.user.email,
@@ -178,13 +155,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         joinDate: new Date(),
         lastLogin: new Date(),
       };
-      setUser(u);
-      saveUser(u);
-      saveTokens(data.access, data.refresh);
+      setUser(u); saveUser(u); saveTokens(data.access, data.refresh);
       return true;
-    } catch {
-      return false;
-    }
+    } catch { return false; }
   };
 
   const logout = async () => {
@@ -197,16 +170,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify({ refresh }),
         });
       }
-    } catch {
-      // ignore network error on logout
-    } finally {
-      clearTokens();
-      setUser(null);
-      saveUser(null);
+    } catch {} finally {
+      clearTokens(); setUser(null); saveUser(null);
     }
   };
 
-  // ถ้า backend ยังไม่มี endpoint เหล่านี้ ฟังก์ชันจะคืน false แทน
   const forgotPassword = async (email: string): Promise<boolean> => {
     try {
       const r = await fetch(`${API_BASE}/auth/forgot`, {
@@ -215,29 +183,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email }),
       });
       return r.ok;
-    } catch {
-      return false;
-    }
+    } catch { return false; }
   };
 
   const resetPassword = async (token: string, password: string): Promise<boolean> => {
     try {
+      // demo: ส่ง email + password (backend mock ไว้)
       const r = await fetch(`${API_BASE}/auth/reset`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ email: user?.email, token, password }),
       });
       return r.ok;
-    } catch {
-      return false;
-    }
+    } catch { return false; }
   };
 
   const updateProfile = (data: Partial<User>) => {
     if (!user) return;
     const updated = { ...user, ...data };
-    setUser(updated);
-    saveUser(updated);
+    setUser(updated); saveUser(updated);
   };
 
   const value: AuthContextType = {

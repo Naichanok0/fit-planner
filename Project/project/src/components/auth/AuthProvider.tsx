@@ -1,29 +1,18 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 
 interface User {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  age: number;
-  gender: 'male' | 'female';
-  fitnessLevel: 'standard';
-  goal: 'weight-loss' | 'muscle-gain' | 'maintenance';
-  joinDate: Date;
-  lastLogin: Date;
+  firstName?: string;
+  lastName?: string;
+  age?: number;
+  gender?: 'male' | 'female';
+  fitnessLevel?: 'standard' | 'beginner' | 'intermediate' | 'advanced';
+  goal?: 'weight-loss' | 'muscle-gain' | 'maintenance';
+  joinDate?: Date;
+  lastLogin?: Date;
   profilePicture?: string;
   phone?: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (userData: RegisterData) => Promise<boolean>;
-  logout: () => void;
-  forgotPassword: (email: string) => Promise<boolean>;
-  resetPassword: (token: string, password: string) => Promise<boolean>;
-  updateProfile: (data: Partial<User>) => void;
 }
 
 interface RegisterData {
@@ -33,126 +22,222 @@ interface RegisterData {
   lastName: string;
   age: number;
   gender: 'male' | 'female';
-  fitnessLevel: 'standard';
+  fitnessLevel: 'standard' | 'beginner' | 'intermediate' | 'advanced';
   goal: 'weight-loss' | 'muscle-gain' | 'maintenance';
 }
 
+interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (userData: RegisterData) => Promise<boolean>;
+  logout: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<boolean>;
+  resetPassword: (token: string, password: string) => Promise<boolean>;
+  updateProfile: (data: Partial<User>) => void;
+  apiFetch: <T = any>(path: string, init?: RequestInit) => Promise<T>;
+}
+
+
+// === ปรับ URL ให้ตรงกับ backend ของคุณ ===
+const API_BASE =
+  (import.meta as any).env?.VITE_API_BASE ?? 'http://localhost:3000';
+
+
+const LS_USER = 'ai-health-user';
+const LS_AT = 'access_token';
+const LS_RT = 'refresh_token';
+
 const AuthContext = createContext<AuthContextType | null>(null);
-
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
+  return ctx;
 }
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider({ children }: { children: ReactNode }) {
+  // โหลด user/token จาก localStorage
   const [user, setUser] = useState<User | null>(() => {
-    // โหลดข้อมูลจาก localStorage เมื่อเริ่มต้น
     try {
-      const savedUser = localStorage.getItem('ai-health-user');
-      return savedUser ? JSON.parse(savedUser) : null;
+      const raw = localStorage.getItem(LS_USER);
+      return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
     }
   });
 
-  // ฟังก์ชันบันทึกข้อมูลลง localStorage
-  const saveUserToStorage = (userData: User | null) => {
-    try {
-      if (userData) {
-        localStorage.setItem('ai-health-user', JSON.stringify(userData));
-      } else {
-        localStorage.removeItem('ai-health-user');
-      }
-    } catch (error) {
-      console.warn('ไม่สามารถบันทึกข้อมูลได้:', error);
-    }
+  const saveUser = (u: User | null) => {
+    if (u) localStorage.setItem(LS_USER, JSON.stringify(u));
+    else localStorage.removeItem(LS_USER);
+  };
+  const saveTokens = (access?: string, refresh?: string) => {
+    if (access) localStorage.setItem(LS_AT, access);
+    if (refresh) localStorage.setItem(LS_RT, refresh);
+  };
+  const clearTokens = () => {
+    localStorage.removeItem(LS_AT);
+    localStorage.removeItem(LS_RT);
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock successful login
-    if (email === 'demo@example.com' && password === 'password') {
-      const mockUser: User = {
-        id: 'user-001',
-        email: email,
-        firstName: 'สมชาย',
-        lastName: 'ใจดี',
-        age: 28,
-        gender: 'male',
-        fitnessLevel: 'standard',
-        goal: 'muscle-gain',
-        joinDate: new Date('2024-01-15'),
-        lastLogin: new Date(),
-        phone: '0812345678',
-        profilePicture: 'https://images.unsplash.com/photo-1706025090996-63717544be2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBoZWFkc2hvdCUyMGFzaWFuJTIwbWFufGVufDF8fHx8MTc1OTM0MjAwM3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-      };
-      setUser(mockUser);
-      saveUserToStorage(mockUser);
-      return true;
+  const getAccess = () => localStorage.getItem(LS_AT) || '';
+  const getRefresh = () => localStorage.getItem(LS_RT) || '';
+
+  // เรียกใช้กับ endpoint อื่น ๆ ในระบบ (auto-attach token + auto-refresh)
+  const apiFetch = useCallback(async <T = any>(path: string, init: RequestInit = {}) => {
+    const withAuth = (token: string) => ({
+      ...init,
+      headers: {
+        ...(init.headers || {}),
+        'Content-Type': (init as any).body ? 'application/json' : (init.headers as any)?.['Content-Type'] ?? 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    let res = await fetch(`${API_BASE}${path.startsWith('/') ? path : `/${path}`}`, withAuth(getAccess()));
+    if (res.status !== 401) {
+      if (!res.ok) throw new Error((await res.text()) || res.statusText);
+      return (await res.json()) as T;
     }
-    
-    return false;
+
+    // 401 → ขอ access token ใหม่ด้วย refresh
+    const refresh = getRefresh();
+    if (!refresh) throw new Error('Unauthorized');
+
+    const r = await fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh }),
+    });
+
+    if (!r.ok) {
+      // refresh ใช้ไม่ได้แล้ว
+      clearTokens();
+      setUser(null);
+      saveUser(null);
+      throw new Error('Session expired');
+    }
+
+    const { access } = await r.json();
+    saveTokens(access);
+    // retry อีกรอบด้วย access ใหม่
+    res = await fetch(`${API_BASE}${path.startsWith('/') ? path : `/${path}`}`, withAuth(access));
+    if (!res.ok) throw new Error((await res.text()) || res.statusText);
+    return (await res.json()) as T;
+  }, []);
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const r = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!r.ok) return false;
+
+      const data = await r.json(); // { user, access, refresh }
+      const u: User = {
+        id: String(data.user.id),
+        email: data.user.email,
+        firstName: data.user.firstName,
+        lastName: data.user.lastName,
+        age: data.user.age,
+        gender: data.user.gender,
+        fitnessLevel: data.user.fitnessLevel ?? 'standard',
+        goal: data.user.goal,
+        joinDate: data.user.joinDate ? new Date(data.user.joinDate) : undefined,
+        lastLogin: new Date(),
+      };
+      setUser(u);
+      saveUser(u);
+      saveTokens(data.access, data.refresh);
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const register = async (userData: RegisterData): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Mock successful registration
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      age: userData.age,
-      gender: userData.gender,
-      fitnessLevel: userData.fitnessLevel,
-      goal: userData.goal,
-      joinDate: new Date(),
-      lastLogin: new Date()
-    };
-    
-    setUser(newUser);
-    saveUserToStorage(newUser);
-    return true;
+    try {
+      const r = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+      if (!r.ok) return false;
+
+      const data = await r.json(); // { user, access, refresh }
+      const u: User = {
+        id: String(data.user.id),
+        email: data.user.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        age: userData.age,
+        gender: userData.gender,
+        fitnessLevel: userData.fitnessLevel,
+        goal: userData.goal,
+        joinDate: new Date(),
+        lastLogin: new Date(),
+      };
+      setUser(u);
+      saveUser(u);
+      saveTokens(data.access, data.refresh);
+      return true;
+    } catch {
+      return false;
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    saveUserToStorage(null);
+  const logout = async () => {
+    try {
+      const refresh = getRefresh();
+      if (refresh) {
+        await fetch(`${API_BASE}/auth/logout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh }),
+        });
+      }
+    } catch {
+      // ignore network error on logout
+    } finally {
+      clearTokens();
+      setUser(null);
+      saveUser(null);
+    }
   };
 
-  const forgotPassword = async (_email: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock successful password reset request
-    return true;
+  // ถ้า backend ยังไม่มี endpoint เหล่านี้ ฟังก์ชันจะคืน false แทน
+  const forgotPassword = async (email: string): Promise<boolean> => {
+    try {
+      const r = await fetch(`${API_BASE}/auth/forgot`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      return r.ok;
+    } catch {
+      return false;
+    }
   };
 
-  const resetPassword = async (_token: string, _password: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock successful password reset
-    return true;
+  const resetPassword = async (token: string, password: string): Promise<boolean> => {
+    try {
+      const r = await fetch(`${API_BASE}/auth/reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password }),
+      });
+      return r.ok;
+    } catch {
+      return false;
+    }
   };
 
   const updateProfile = (data: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...data };
-      setUser(updatedUser);
-      saveUserToStorage(updatedUser);
-    }
+    if (!user) return;
+    const updated = { ...user, ...data };
+    setUser(updated);
+    saveUser(updated);
   };
 
   const value: AuthContextType = {
@@ -163,12 +248,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     forgotPassword,
     resetPassword,
-    updateProfile
+    updateProfile,
+    apiFetch,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

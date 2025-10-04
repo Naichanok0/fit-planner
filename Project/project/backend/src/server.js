@@ -1,11 +1,12 @@
 // backend/src/server.js
-// --- Robust dotenv loader: รองรับ UTF-8/UTF-16LE และอักขระเพี้ยน ---
+// ✅ Robust dotenv loader: รองรับ UTF-8 / UTF-16LE / ตรวจ env ครบ
 const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
 
 const envPath = path.join(__dirname, 'mysql.env');
-let result = dotenv.config({ path: envPath });
+let result = dotenv.config({ path: envPath, override: true });
+
 if (!result.parsed || Object.keys(result.parsed).length === 0) {
   try {
     const raw = fs.readFileSync(envPath, 'utf16le'); // fallback กรณีไฟล์เป็น UTF-16
@@ -16,6 +17,21 @@ if (!result.parsed || Object.keys(result.parsed).length === 0) {
     console.warn('[env] fallback failed:', e.message);
   }
 }
+
+// 🔍 ตรวจว่ามี env ครบ
+function requireEnv(keys) {
+  const miss = keys.filter(k => !process.env[k] || String(process.env[k]).trim() === '');
+  if (miss.length)
+    throw new Error('❌ Missing env variable(s): ' + miss.join(', ') + ' — check mysql.env file');
+}
+
+requireEnv(['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASS', 'DB_NAME']);
+
+console.log('[env] DB_HOST =', process.env.DB_HOST);
+console.log('[env] DB_USER =', process.env.DB_USER);
+console.log('[env] DB_NAME =', process.env.DB_NAME);
+console.log('[env] DB_PASS length =', (process.env.DB_PASS || '').length);
+
 // ---------------------------------------------------------------------
 
 const express = require('express');
@@ -26,12 +42,12 @@ const cors = require('cors');
 
 const app = express();
 
-/* Middlewares */
+/* 🧱 Middlewares */
 app.use(express.json({ limit: '1mb' }));
 app.use(helmet());
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
 
-// ✅ อนุญาต frontend ที่พอร์ต 3000 (แก้ได้ผ่าน ENV ถ้าต้องการ)
+// ✅ อนุญาต frontend ที่พอร์ต 3000 (แก้ได้ผ่าน ENV)
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3000';
 app.use(
   cors({
@@ -40,13 +56,13 @@ app.use(
   })
 );
 
-/* MySQL Pool */
+/* 🗄️ MySQL Pool */
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || '127.0.0.1',
-  port: Number(process.env.DB_PORT || 3306),
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASS || '',
-  database: process.env.DB_NAME || 'planner',
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -63,10 +79,11 @@ async function q(sql, params = []) {
   }
 }
 
-/* Health */
+/* 🧩 Health Check */
 app.get('/health', (_req, res) =>
   res.json({ ok: true, service: 'FitLife Planner API' })
 );
+
 app.get('/db/health', async (_req, res, next) => {
   try {
     const [row] = await q('SELECT 1 AS ok');
@@ -76,11 +93,11 @@ app.get('/db/health', async (_req, res, next) => {
   }
 });
 
-/* Auth routes */
+/* 🔐 Auth Routes */
 const authRoutes = require('./routes/auth'); // export: (q) => router
 app.use('/auth', authRoutes(q));
 
-/* ตัวอย่าง route เพิ่มเติม (optional) */
+/* (Optional) Middleware ตัวอย่าง */
 let authRequired;
 try {
   ({ authRequired } = require('./middleware/auth'));
@@ -88,18 +105,37 @@ try {
   authRequired = (_req, _res, next) => next();
 }
 
-/* Error handler */
+/* 🚨 Error Handler */
 app.use((err, _req, res, _next) => {
   console.error(err);
   const code = err.status || 500;
   res.status(code).json({ error: err.message || 'Internal Server Error' });
 });
 
-/* Start
-   ✅ ตั้งค่า default เป็น 3001 (กันชนกับเว็บ 3000 เสมอ)
-   สามารถ override ได้ด้วย ENV: PORT=4000 node server.js
-*/
+/* 🚀 Start Server — รอ DB พร้อมก่อนเปิด */
+async function waitForDB() {
+  for (let i = 1; i <= 15; i++) {
+    try {
+      const [row] = await q('SELECT 1 AS ok');
+      console.log(`[db] ready: ${row.ok}`);
+      return;
+    } catch (e) {
+      console.warn(`[db] retry ${i}/15: ${e.message}`);
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
+  throw new Error('MySQL is not reachable. Check service/port/user/pass.');
+}
+
 const PORT = Number(process.env.PORT || 3001);
-app.listen(PORT, () =>
-  console.log(`✅ FitLife Planner API running on http://localhost:${PORT}`)
-);
+
+waitForDB()
+  .then(() =>
+    app.listen(PORT, () =>
+      console.log(`✅ FitLife Planner API running on http://localhost:${PORT}`)
+    )
+  )
+  .catch(err => {
+    console.error('❌ Startup failed:', err.message);
+    process.exit(1);
+  });

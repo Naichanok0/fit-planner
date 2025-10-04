@@ -1,17 +1,31 @@
--- schema.sql  (RUN IN MYSQL)
-CREATE DATABASE IF NOT EXISTS Planner CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- =========================
+-- schema.sql  (MySQL 8+)
+-- =========================
+-- ฐานข้อมูลหลัก
+CREATE DATABASE IF NOT EXISTS Planner
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
 USE Planner;
 
--- ใช้ใน MySQL 8+
--- โค้ดนี้เลือก charset/engine และสร้างเฉพาะตารางที่จำเป็นตาม frontend
-
+-- ตั้งค่าพื้นฐาน
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
--- 1) ผู้ใช้: รองรับ Login/Register/Profile
--- อิงฟิลด์จาก AuthProvider + UserProfile (email, name, age, gender, fitness_level, goal, profile_picture เป็นต้น)
--- แหล่งอ้างอิง: AuthProvider.tsx, UserProfile.tsx
+-- -------------------------
+-- DROP ตาราง (ตามลำดับ FK)
+-- -------------------------
+DROP TABLE IF EXISTS refresh_tokens;
+DROP TABLE IF EXISTS progress_daily;
+DROP TABLE IF EXISTS nutrition_logs;
+DROP TABLE IF EXISTS workout_sessions;
+DROP TABLE IF EXISTS user_programs;
+DROP TABLE IF EXISTS body_measurements;
 DROP TABLE IF EXISTS users;
+
+-- -------------------------
+-- 1) users (บัญชีผู้ใช้)
+-- -------------------------
 CREATE TABLE users (
   id               INT AUTO_INCREMENT PRIMARY KEY,
   email            VARCHAR(255) NOT NULL UNIQUE,
@@ -28,10 +42,9 @@ CREATE TABLE users (
   last_login       DATETIME
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 2) ผลวิเคราะห์ร่างกาย: หน้า BodyAnalysis
--- เก็บค่าจำเป็น (ส่วนสูง/น้ำหนัก/BMI/%ไขมัน/สัดส่วน/ชนิดรูปร่าง) + analysis_json ไว้รายละเอียดเพิ่ม
--- แหล่งอ้างอิง: BodyAnalysis.tsx
-DROP TABLE IF EXISTS body_measurements;
+-- --------------------------------------
+-- 2) body_measurements (ผลวิเคราะห์ร่างกาย)
+-- --------------------------------------
 CREATE TABLE body_measurements (
   id                           INT AUTO_INCREMENT PRIMARY KEY,
   user_id                      INT NOT NULL,
@@ -50,10 +63,9 @@ CREATE TABLE body_measurements (
   INDEX idx_bm_user_created (user_id, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 3) โปรแกรมที่ผู้ใช้เลือก/กำลังใช้งาน: หน้า PersonalProgram
--- program_id, image_ref มาจาก metadata/ไฟล์ JSON ฝั่ง FE
--- แหล่งอ้างอิง: PersonalProgram.tsx
-DROP TABLE IF EXISTS user_programs;
+-- --------------------------------
+-- 3) user_programs (โปรแกรมที่เลือก)
+-- --------------------------------
 CREATE TABLE user_programs (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   user_id       INT NOT NULL,
@@ -69,15 +81,14 @@ CREATE TABLE user_programs (
   INDEX idx_up_user_goal (user_id, goal)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 4) เซสชันการฝึกจริงต่อวัน: ใช้ทั้งหน้า PersonalProgram + ProgressDashboard
--- exercises_json/form_feedback_json เก็บ snapshot ท่าที่ทำและฟีดแบ็กท่าทางจาก FE
--- แหล่งอ้างอิง: PersonalProgram.tsx, ProgressDashboard.tsx
-DROP TABLE IF EXISTS workout_sessions;
+-- ------------------------------------------------
+-- 4) workout_sessions (เซสชันการฝึกต่อวัน/ต่อโปรแกรม)
+-- ------------------------------------------------
 CREATE TABLE workout_sessions (
   id                   INT AUTO_INCREMENT PRIMARY KEY,
   user_id              INT NOT NULL,
-  program_id           VARCHAR(100),         -- อ้างอิง id จาก metadata
-  day_code             VARCHAR(50),          -- เช่น mg-day1/wl-day3 ฯลฯ
+  program_id           VARCHAR(100),
+  day_code             VARCHAR(50),          -- เช่น mg-day1/wl-day3
   session_date         DATE NOT NULL,
   duration_min         INT,
   estimated_calories   INT,
@@ -92,15 +103,14 @@ CREATE TABLE workout_sessions (
   INDEX idx_ws_user_completed (user_id, completed)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 5) บันทึกโภชนาการต่อวัน/มื้อตามแผน: หน้า NutritionPlanner
--- รายการอาหารจริงเก็บใน foods_json (metadata เป็นต้นทาง)
--- แหล่งอ้างอิง: NutritionPlanner.tsx
-DROP TABLE IF EXISTS nutrition_logs;
+-- ---------------------------------------------
+-- 5) nutrition_logs (บันทึกโภชนาการรายมื้อ/รายวัน)
+-- ---------------------------------------------
 CREATE TABLE nutrition_logs (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   user_id       INT NOT NULL,
   log_date      DATE NOT NULL,
-  meal_id       VARCHAR(50) NOT NULL,   -- breakfast/lunch/dinner/snack_x
+  meal_id       VARCHAR(50) NOT NULL,  -- breakfast/lunch/dinner/snack_x
   planned_time  TIME,
   completed     BOOLEAN DEFAULT FALSE,
   calories      INT,
@@ -111,24 +121,40 @@ CREATE TABLE nutrition_logs (
   INDEX idx_nl_user_date (user_id, log_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 6) สรุปความก้าวหน้ารายวัน (optional แต่ช่วย Dashboard ตอบสนองไว)
--- ถ้าไม่ต้องการ cache สามารถคำนวณจาก workout_sessions + nutrition_logs ตอน query ได้
--- แหล่งอ้างอิง: ProgressDashboard.tsx
-DROP TABLE IF EXISTS progress_daily;
+-- --------------------------------------------
+-- 6) progress_daily (สรุปความก้าวหน้ารายวัน)
+-- --------------------------------------------
 CREATE TABLE progress_daily (
-  id                 INT AUTO_INCREMENT PRIMARY KEY,
-  user_id            INT NOT NULL,
-  date               DATE NOT NULL,
-  total_reps         INT,
-  day_streak         INT,
-  calories_burned    INT,
-  avg_form_score     DECIMAL(5,2),
+  id                  INT AUTO_INCREMENT PRIMARY KEY,
+  user_id             INT NOT NULL,
+  date                DATE NOT NULL,
+  total_reps          INT,
+  day_streak          INT,
+  calories_burned     INT,
+  avg_form_score      DECIMAL(5,2),
   exercises_completed INT,
-  summary_json       JSON,
-  created_at         DATETIME DEFAULT CURRENT_TIMESTAMP,
+  summary_json        JSON,
+  created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_pd_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   UNIQUE KEY uniq_user_date (user_id, date),
   INDEX idx_pd_user_date (user_id, date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------
+-- 7) refresh_tokens (เก็บรีเฟรชโทเค็นสำหรับ JWT)
+-- --------------------------------------------
+CREATE TABLE refresh_tokens (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,                     -- *** ตรงกับ users.id (INT) ***
+  token VARCHAR(255) NOT NULL,
+  revoked TINYINT(1) NOT NULL DEFAULT 0,
+  expires_at DATETIME NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_token (token),
+  KEY idx_user_expires (user_id, expires_at),
+  CONSTRAINT fk_refresh_user
+    FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -158,3 +158,56 @@ CREATE TABLE refresh_tokens (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+USE Planner;
+
+-- เผื่อมี trigger เดิมชื่อซ้ำ (ไม่มี ก็ข้ามได้)
+DROP TRIGGER IF EXISTS set_refresh_expires;
+
+DELIMITER $$
+CREATE TRIGGER set_refresh_expires
+BEFORE INSERT ON refresh_tokens
+FOR EACH ROW
+BEGIN
+  IF NEW.expires_at IS NULL THEN
+    SET NEW.expires_at = DATE_ADD(NOW(), INTERVAL 30 DAY);
+  END IF;
+END$$
+DELIMITER ;
+
+
+USE Planner;
+-- ถ้ายังไม่มีผู้ใช้เลย ให้สร้างทดสอบก่อน (เพื่อมี id)
+INSERT INTO users (email, password_hash, join_date) VALUES ('tmp@test.local','x', NOW());
+
+-- ดึง id ล่าสุดของผู้ใช้ที่เพิ่งสร้าง
+SET @uid = LAST_INSERT_ID();
+
+-- แทรก refresh token โดย "ไม่ใส่ expires_at" เพื่อทดสอบ trigger
+INSERT INTO refresh_tokens (user_id, token) VALUES (@uid, UUID());
+
+-- ดูผลว่าถูกเติม expires_at อัตโนมัติไหม
+SELECT id, user_id, token, expires_at
+FROM refresh_tokens
+ORDER BY id DESC
+LIMIT 1;
+
+
+USE Planner;
+
+DROP TRIGGER IF EXISTS set_refresh_expires;
+
+DELIMITER $$
+CREATE TRIGGER set_refresh_expires
+BEFORE INSERT ON refresh_tokens
+FOR EACH ROW
+BEGIN
+  IF NEW.expires_at IS NULL THEN
+    SET NEW.expires_at = DATE_ADD(NOW(), INTERVAL 30 DAY);
+  END IF;
+END$$
+DELIMITER ;
+
+ALTER TABLE users 
+  MODIFY fitness_level ENUM('standard','beginner','intermediate','advanced') 
+  DEFAULT 'standard';

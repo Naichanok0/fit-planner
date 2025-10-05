@@ -1,22 +1,21 @@
+
 # backend_Ai/main.py
+# Clean merge: รวมฟีเจอร์ทั้งสองฝั่ง (JSONResponse/metadata + OpenCV/cv2 + Optional typing)
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import uvicorn
 import numpy as np
 import os
 import faiss
-<<<<<<< HEAD
-from fastapi.responses import JSONResponse
 import json
-=======
 import cv2
 from typing import Optional
->>>>>>> 80c626bce4531287b5228fe402b11cd8db6600d1
 
-from .model import base_model, preprocess_fn
-from .utils import get_embedding_tta, estimate_chest_circumference_cm
-from .detector import BodyDetector
-from .validators import (
+from model import base_model, preprocess_fn
+from utils import get_embedding_tta, estimate_chest_circumference_cm
+from detector import BodyDetector
+from validators import (
     is_full_body_landmarks, frontal_pose_ok, arms_clear_torso,
     body_height_norm, chest_line_points, L_SHOULDER, R_SHOULDER, L_HIP, R_HIP
 )
@@ -29,20 +28,22 @@ app.add_middleware(
     allow_methods=["*"], allow_headers=["*"],
 )
 
-DATASET_DIR = "dataset"
+# ใช้ path แบบ relative จากไฟล์นี้ เพื่อให้รันจากที่ไหนก็เจอ
+HERE = os.path.dirname(os.path.abspath(__file__))
+DATASET_DIR = os.path.join(HERE, "dataset")
 VALID_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
 
 # ===== Globals (แยกตาม subset) =====
 emb_all = None           # np.ndarray normalized
-paths_all = []           # relative paths
+paths_all: list[str] = []           # relative paths (ภายใน DATASET_DIR)
 index_all = None
 
 emb_men = None
-paths_men = []
+paths_men: list[str] = []
 index_men = None
 
 emb_women = None
-paths_women = []
+paths_women: list[str] = []
 index_women = None
 
 # Pose detector (ใช้ซ้ำ)
@@ -92,6 +93,9 @@ def load_dataset():
 
     vecs_all = []
     paths_all_local = []
+
+    if not os.path.exists(DATASET_DIR):
+        os.makedirs(DATASET_DIR, exist_ok=True)
 
     for root, _, files in os.walk(DATASET_DIR):
         for file in files:
@@ -213,7 +217,7 @@ async def pose(file: UploadFile = File(...)):
 @app.post("/detect/")
 async def detect(
     file: UploadFile = File(...),
-    gender: str | None = Form(default=None, description="men / women; เว้นว่าง = ค้นหาทั้งหมด"),
+    gender: Optional[str] = Form(default=None, description="men / women; เว้นว่าง = ค้นหาทั้งหมด"),
 ):
     if emb_all is None or index_all is None:
         raise HTTPException(status_code=500, detail="Index ยังไม่พร้อม กรุณารีสตาร์ทหรือรอโหลด dataset")
@@ -253,9 +257,9 @@ async def chest_measure(
     file: UploadFile = File(...),
     height_cm: float = Form(...),           # ผู้ใช้กรอก
     weight_kg: float = Form(...),           # ผู้ใช้กรอก
-    gender: str | None = Form(None),        # 'men' / 'women' / เว้นว่าง
+    gender: Optional[str] = Form(None),     # 'men' / 'women' / เว้นว่าง
     chest_level: float = Form(0.33),        # 0.30-0.40 ปรับตามภาพ
-    fixed_depth_ratio: float | None = Form(None),  # ถ้าอยากบังคับ ratio เอง
+    fixed_depth_ratio: Optional[float] = Form(None),  # ถ้าอยากบังคับ ratio เอง
 ):
     if pose_detector is None:
         raise HTTPException(status_code=500, detail="Pose detector ยังไม่พร้อม")
@@ -292,7 +296,7 @@ async def chest_front_and_side(
     file_side: UploadFile = File(...),
     height_cm: float = Form(...),
     weight_kg: float = Form(...),
-    gender: str | None = Form(None),
+    gender: Optional[str] = Form(None),
     chest_level: float = Form(0.33),
 ):
     if pose_detector is None:
@@ -377,4 +381,5 @@ def get_metadata():
 
 
 if __name__ == "__main__":
+    # เปลี่ยนพอร์ตตามต้องการ (เช่น 8000)
     uvicorn.run(app, host="0.0.0.0", port=8000)

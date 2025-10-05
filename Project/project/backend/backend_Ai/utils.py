@@ -1,3 +1,4 @@
+
 # backend_Ai/utils.py
 from typing import Dict, List, Optional
 import numpy as np
@@ -99,6 +100,7 @@ def classify_shape(shoulder_w: float, hip_w: float, waist_w: float) -> str:
 
 def ellipse_circumference_ramanujan(a: float, b: float) -> float:
     """ประมาณเส้นรอบวงของวงรี (a,b = กึ่งแกนเป็นเซนติเมตร)"""
+    import math
     return math.pi * (3*(a+b) - math.sqrt((3*a+b)*(a+3*b)))
 
 def chest_depth_ratio_auto(gender: Optional[str], height_cm: float, weight_kg: float) -> float:
@@ -138,7 +140,7 @@ def estimate_chest_circumference_cm(
     - ถ้ามี side_depth_cm → ใช้เป็นความลึกจริง
     - ถ้าไม่มี → ใช้ fixed_depth_ratio ถ้าส่งมา, ไม่งั้นคำนวณ auto จาก gender+BMI
     """
-    from .validators import chest_line_points, body_height_norm
+    from validators import chest_line_points, body_height_norm
 
     if lm is None:
         return {"ok": False, "reason": "no_landmarks"}

@@ -1,0 +1,14 @@
+[
+  {
+    "image": "public/brain-icon.svg",
+    "goal": "muscle-gain",
+    "program": {
+      "id": "prog-1",
+      "name": "Starter Strength",
+      "goal": "muscle-gain",
+      "duration": "8 weeks",
+      "weeklySchedule": [],
+      "nutritionTips": ["Eat more protein", "Progressive overload"]
+    }
+  }
+]

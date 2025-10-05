@@ -8,7 +8,7 @@ import { ExerciseLibrary } from './components/ExerciseLibrary';
 import { ProgressDashboard } from './components/ProgressDashboard';
 import { BodyAnalysis } from './components/BodyAnalysis';
 import { NutritionPlanner } from './components/NutritionPlanner';
-import { PersonalProgram } from './components/PersonalProgram';
+import { DailyPrograms } from './components/DailyPrograms';
 import { UserProfile } from './components/UserProfile';
 import { AuthProvider, useAuth } from './components/auth/AuthProvider';
 import { LanguageProvider } from './components/language/LanguageProvider';
@@ -223,14 +223,9 @@ function MainApp() {
 
           {/* Personal Program Tab */}
           <TabsContent value="personal-program">
-            <PersonalProgram 
+            <DailyPrograms 
               userGoal={user?.goal || 'maintenance'}
-              bodyMeasurements={bodyMeasurements || undefined}
-              fitnessLevel={user?.fitnessLevel || 'standard'}
-              selectedExercise={selectedExercise}
-              onSelectExercise={setSelectedExercise}
-              onSessionComplete={handleSessionComplete}
-              totalReps={totalReps}
+              fitnessLevel={'standard'}
             />
           </TabsContent>
 

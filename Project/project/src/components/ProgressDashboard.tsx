@@ -71,8 +71,23 @@ export function ProgressDashboard({ totalReps, currentStreak, formFeedback }: Pr
 
   return (
     <div className="space-y-6">
+      {/* Dashboard Header */}
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">📊 แดชบอร์ดความก้าวหน้า</h1>
+        <p className="text-muted-foreground">
+          ติดตามผลการออกกำลังกาย วิเคราะห์ประสิทธิภาพ และรับคำแนะนำเพื่อการพัฒนาที่ดียิ่งขึ้น
+        </p>
+      </div>
+
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div>
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          📈 ตัวชี้วัดหลัก
+          <span className="text-sm font-normal text-muted-foreground">
+            - สถิติสำคัญของการออกกำลังกายในวันนี้
+          </span>
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mx-auto mb-2">
@@ -113,16 +128,27 @@ export function ProgressDashboard({ totalReps, currentStreak, formFeedback }: Pr
           </CardContent>
         </Card>
       </div>
+      </div>
 
       {/* Charts Row */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div>
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          📊 กราฟแสดงข้อมูล
+          <span className="text-sm font-normal text-muted-foreground">
+            - วิเคราะห์แนวโน้มและรูปแบบการออกกำลังกาย
+          </span>
+        </h2>
+        <div className="grid md:grid-cols-2 gap-6">
         {/* Weekly Progress */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
-              Weekly Progress
+              ความก้าวหน้ารายสัปดาห์
             </CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              📊 กราฟแสดงจำนวน Reps ที่ทำได้ในแต่ละวันของสัปดาห์ ช่วยติดตามความสม่ำเสมอในการออกกำลังกาย
+            </p>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
@@ -134,6 +160,11 @@ export function ProgressDashboard({ totalReps, currentStreak, formFeedback }: Pr
                 <Bar dataKey="reps" fill="#8884d8" />
               </BarChart>
             </ResponsiveContainer>
+            <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+              <p className="text-xs text-blue-700">
+                💡 <strong>คำแนะนำ:</strong> ควรออกกำลังกายอย่างสม่ำเสมอ 5-6 วันต่อสัปดาห์ เพื่อผลลัพธ์ที่ดีที่สุด
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -142,8 +173,11 @@ export function ProgressDashboard({ totalReps, currentStreak, formFeedback }: Pr
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5" />
-              Exercise Distribution
+              การกระจายประเภทการออกกำลังกาย
             </CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              🥧 กราฟวงกลมแสดงสัดส่วนการออกกำลังกายแต่ละประเภท ช่วยวางแผนการออกกำลังกายให้สมดุล
+            </p>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
@@ -164,6 +198,11 @@ export function ProgressDashboard({ totalReps, currentStreak, formFeedback }: Pr
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
+            <div className="mt-3 p-3 bg-green-50 rounded-lg">
+              <p className="text-xs text-green-700">
+                💡 <strong>คำแนะนำ:</strong> ควรหมุนเวียนการออกกำลังกายให้ครอบคลุมทุกกลุ่มกล้ามเนื้อ เพื่อการพัฒนาที่สมดุล
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -173,8 +212,11 @@ export function ProgressDashboard({ totalReps, currentStreak, formFeedback }: Pr
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="w-5 h-5" />
-            Form Accuracy Trend
+            แนวโน้มความแม่นยำในการออกกำลังกาย
           </CardTitle>
+          <p className="text-sm text-muted-foreground mt-2">
+            📈 กราฟเส้นแสดงการพัฒนาความแม่นยำในการออกกำลังกายแต่ละเดือน ช่วยติดตามการปรับปรุงท่าทางและเทคนิค
+          </p>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={200}>
@@ -192,13 +234,21 @@ export function ProgressDashboard({ totalReps, currentStreak, formFeedback }: Pr
               />
             </LineChart>
           </ResponsiveContainer>
+          <div className="mt-3 p-3 bg-purple-50 rounded-lg">
+            <p className="text-xs text-purple-700">
+              💡 <strong>คำแนะนำ:</strong> ความแม่นยำ 90% ขึ้นไปถือว่าดีมาก แสดงถึงการควบคุมท่าทางที่ถูกต้อง
+            </p>
+          </div>
         </CardContent>
       </Card>
 
       {/* Current Session Feedback */}
       <Card>
         <CardHeader>
-          <CardTitle>Real-time Feedback</CardTitle>
+          <CardTitle>ข้อเสนอแนะแบบเรียลไทม์</CardTitle>
+          <p className="text-sm text-muted-foreground mt-2">
+            ⚡ แสดงข้อเสนอแนะการปรับปรุงท่าทางระหว่างการออกกำลังกาย เพื่อความปลอดภัยและประสิทธิภาพสูงสุด
+          </p>
         </CardHeader>
         <CardContent>
           {formFeedback.length > 0 ? (
@@ -211,13 +261,20 @@ export function ProgressDashboard({ totalReps, currentStreak, formFeedback }: Pr
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-4">
-              Start a workout to see real-time form feedback
-            </p>
+            <div className="text-center py-6">
+              <p className="text-muted-foreground mb-2">
+                เริ่มต้นการออกกำลังกายเพื่อดูข้อเสนะแนะแบบเรียลไทม์
+              </p>
+              <div className="p-3 bg-orange-50 rounded-lg">
+                <p className="text-xs text-orange-700">
+                  💡 <strong>เคล็ดลับ:</strong> ระบบ AI จะช่วยตรวจสอบท่าทางและให้คำแนะนำทันทีเพื่อป้องกันการบาดเจ็บ
+                </p>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
-
+      </div>
 
     </div>
   );

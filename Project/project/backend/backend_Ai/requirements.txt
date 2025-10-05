@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+numpy
+faiss-cpu
+tensorflow
+pillow
+opencv-python
+mediapipe
+jax
+jaxlib
+matplotlib
+sentencepiece
+attrs

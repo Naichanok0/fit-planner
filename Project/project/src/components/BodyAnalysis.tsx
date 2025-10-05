@@ -1,4 +1,4 @@
-import { useState, useRef, ChangeEvent } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -104,7 +104,7 @@ export function BodyAnalysis({ onAnalysisComplete, userGoal, fitnessLevel, onNav
     }
   ];
 
-  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();

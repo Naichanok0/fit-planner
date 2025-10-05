@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { 
   Apple, 
@@ -9,12 +8,15 @@ import {
   Flame,
   ChefHat,
   CheckCircle,
-  Plus,
-  Minus,
   Coffee,
   UtensilsCrossed,
   Moon,
-  RefreshCw
+  RefreshCw,
+  Calendar,
+  Target,
+  Droplets,
+  Utensils,
+  Trophy
 } from 'lucide-react';
 
 interface NutritionPlannerProps {
@@ -26,355 +28,400 @@ interface NutritionPlannerProps {
   };
 }
 
-interface Meal {
+interface DatasetMeal {
   id: string;
   name: string;
   time: string;
-  icon: any;
+  nutrition: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+    water: number;
+  };
   foods: string[];
-  calories: number;
+  note?: string;
+}
+
+interface DatasetDay {
+  day: string;
+  workout: {
+    id: string;
+    name: string;
+    duration: number;
+  };
+  meals: DatasetMeal[];
+  water: number;
+  note?: string;
+}
+
+interface DatasetProgram {
+  image: string;
+  goal: string;
+  weeklySchedule: DatasetDay[];
+}
+
+interface WeeklyNutrition {
+  day: string;
+  meals: DatasetMeal[];
+  totalCalories: number;
+  totalProtein: number;
+  totalCarbs: number;
+  totalFat: number;
+  totalFiber: number;
+  waterGoal: number;
   completed: boolean;
+  completionRate: number;
 }
 
-interface FoodItem {
-  name: string;
-  calories: number;
-  category: 'protein' | 'carbs' | 'vegetables' | 'fruits' | 'snacks';
-}
+export function NutritionPlanner({ userGoal = 'maintenance' }: NutritionPlannerProps) {
+  console.log('🍎 NutritionPlanner component rendering with userGoal:', userGoal);
+  const [weeklyNutrition, setWeeklyNutrition] = useState<WeeklyNutrition[]>([]);
+  const [selectedDay, setSelectedDay] = useState<string>('Monday');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-// Simple, common Thai foods that are easy to find
-const COMMON_FOODS: FoodItem[] = [
-  // Protein
-  { name: 'ไข่ต้ม 2 ฟอง', calories: 140, category: 'protein' },
-  { name: 'ปลาทูนึ่ง 1 ตัว', calories: 150, category: 'protein' },
-  { name: 'ไก่ต้ม 100g', calories: 165, category: 'protein' },
-  { name: 'เต้าหู้ 1 แผ่น', calories: 80, category: 'protein' },
-  { name: 'ถั่วลิสง 1 กำมือ', calories: 160, category: 'protein' },
-  
-  // Carbs
-  { name: 'ข้าวกล้อง 1 ถ้วย', calories: 220, category: 'carbs' },
-  { name: 'ข้าวขาว 1 ถ้วย', calories: 200, category: 'carbs' },
-  { name: 'ขนมปังโฮลเวียต 2 แผ่น', calories: 160, category: 'carbs' },
-  { name: 'มัน 1 หัว', calories: 130, category: 'carbs' },
-  { name: 'กล้วยหอม 2 ลูก', calories: 120, category: 'carbs' },
-  
-  // Vegetables
-  { name: 'ผักรวม 1 จาน', calories: 50, category: 'vegetables' },
-  { name: 'แตงกวา 1 ลูก', calories: 15, category: 'vegetables' },
-  { name: 'มะเขือเทศ 2 ลูก', calories: 35, category: 'vegetables' },
-  { name: 'ผักบุ้งลวก 1 จาน', calories: 20, category: 'vegetables' },
-  { name: 'แครอท 1 ลูก', calories: 25, category: 'vegetables' },
-  
-  // Fruits
-  { name: 'แอปเปิ้ล 1 ลูก', calories: 80, category: 'fruits' },
-  { name: 'ส้ม 1 ลูก', calories: 60, category: 'fruits' },
-  { name: 'ฝรั่ง 1 ลูก', calories: 110, category: 'fruits' },
-  { name: 'มะละกอ 1 ถ้วย', calories: 55, category: 'fruits' },
-  
-  // Snacks
-  { name: 'นมข้นหวาน 1 กล่อง', calories: 150, category: 'snacks' },
-  { name: 'โยเกิร์ต 1 ถ้วย', calories: 100, category: 'snacks' },
-  { name: 'อัลมอนด์ 10 เม็ด', calories: 70, category: 'snacks' }
-];
-
-export function NutritionPlanner({ userGoal, bodyMeasurements }: NutritionPlannerProps) {
-  const [currentDate, setCurrentDate] = useState(new Date().toDateString());
-  const [meals, setMeals] = useState<Meal[]>([
-    {
-      id: 'breakfast',
-      name: 'มื้อเช้า',
-      time: '07:00',
-      icon: Coffee,
-      foods: ['ไข่ต้ม 2 ฟอง', 'ขนมปังโฮลเวียต 2 แผ่น', 'กล้วยหอม 1 ลูก'],
-      calories: 360,
-      completed: false
-    },
-    {
-      id: 'lunch',
-      name: 'มื้อกลางวัน',
-      time: '12:00',
-      icon: UtensilsCrossed,
-      foods: ['ข้าวกล้อง 1 ถ้วย', 'ปลาทูนึ่ง 1 ตัว', 'ผักรวม 1 จาน'],
-      calories: 420,
-      completed: false
-    },
-    {
-      id: 'dinner',
-      name: 'มื้อเย็น',
-      time: '18:00',
-      icon: Moon,
-      foods: ['ข้าวขาว 1 ถ้วย', 'ไก่ต้ม 100g', 'ผักบุ้งลวก 1 จาน'],
-      calories: 385,
-      completed: false
-    }
-  ]);
-
-  const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
-
-  // Daily reset system - check if day has changed
+  // Load nutrition data from dataset
   useEffect(() => {
-    const checkDailyReset = () => {
-      const today = new Date().toDateString();
-      const lastResetDate = localStorage.getItem('lastNutritionReset');
-      
-      if (lastResetDate !== today) {
-        // Reset all meals for new day
-        setMeals(prev => prev.map(meal => ({ ...meal, completed: false })));
-        setCurrentDate(today);
-        localStorage.setItem('lastNutritionReset', today);
+    const loadNutritionData = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch('/backend/dataset/metadata.json');
+        if (response.ok) {
+          const dataset = await response.json();
+          
+          console.log('Dataset loaded:', dataset?.length, 'programs');
+          console.log('Looking for userGoal:', userGoal);
+          
+          // Find the program that matches the user's goal
+          const matchingProgram = dataset.find((program: DatasetProgram) => 
+            program.image === 'men/1.png' && program.goal === userGoal
+          );
+
+          console.log('Found matching program:', !!matchingProgram);
+
+          if (matchingProgram && matchingProgram.weeklySchedule) {
+            console.log('Weekly schedule found:', matchingProgram.weeklySchedule.length, 'days');
+            const formattedNutrition = matchingProgram.weeklySchedule.map((dayData: DatasetDay) => {
+              const totalCalories = dayData.meals.reduce((sum, meal) => sum + meal.nutrition.calories, 0);
+              const totalProtein = dayData.meals.reduce((sum, meal) => sum + meal.nutrition.protein, 0);
+              const totalCarbs = dayData.meals.reduce((sum, meal) => sum + meal.nutrition.carbs, 0);
+              const totalFat = dayData.meals.reduce((sum, meal) => sum + meal.nutrition.fat, 0);
+              const totalFiber = dayData.meals.reduce((sum, meal) => sum + meal.nutrition.fiber, 0);
+
+              return {
+                day: dayData.day,
+                meals: dayData.meals,
+                totalCalories,
+                totalProtein,
+                totalCarbs,
+                totalFat,
+                totalFiber,
+                waterGoal: dayData.water,
+                completed: false,
+                completionRate: 0
+              };
+            });
+            setWeeklyNutrition(formattedNutrition);
+          } else {
+            console.log('No matching program found, using default data');
+            // Fallback to default data if no matching program found
+            setWeeklyNutrition(getDefaultNutritionPlan());
+          }
+        } else {
+          console.error('Failed to fetch dataset');
+          setWeeklyNutrition(getDefaultNutritionPlan());
+        }
+      } catch (error) {
+        console.error('Error loading nutrition data:', error);
+        setWeeklyNutrition(getDefaultNutritionPlan());
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    checkDailyReset();
-    // Check every hour after midnight
-    const interval = setInterval(checkDailyReset, 60 * 60 * 1000);
-    
-    return () => clearInterval(interval);
-  }, []);
+    loadNutritionData();
+  }, [userGoal]);
 
-  // Calculate simple targets
-  const calculateTargets = () => {
-    let baseCalories = 1800;
-    
-    if (bodyMeasurements?.weight) {
-      baseCalories = bodyMeasurements.weight * 25; // Simple calculation
-    }
-    
-    switch (userGoal) {
-      case 'weight-loss':
-        baseCalories *= 0.85;
-        break;
-      case 'muscle-gain':
-        baseCalories *= 1.1;
-        break;
-      default:
-        break;
-    }
-    
-    return Math.round(baseCalories);
+  const getDefaultNutritionPlan = (): WeeklyNutrition[] => {
+    console.log('Creating default nutrition plan...');
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const result = days.map(day => ({
+      day,
+      meals: [
+        {
+          id: 'breakfast',
+          name: 'อาหารเช้า',
+          time: '07:00',
+          nutrition: { calories: 400, protein: 25, carbs: 50, fat: 12, fiber: 5, water: 0.3 },
+          foods: ['ข้าวโอ๊ต 1 ถ้วย', 'นมไขมันต่ำ 250ml', 'กล้วย 1 ผล'],
+        },
+        {
+          id: 'lunch',
+          name: 'อาหารเที่ยง',
+          time: '12:30',
+          nutrition: { calories: 600, protein: 40, carbs: 65, fat: 18, fiber: 8, water: 0.5 },
+          foods: ['ข้าวกล้อง 1 ถ้วย', 'อกไก่ย่าง 150g', 'ผักรวม 1 ถ้วย'],
+        },
+        {
+          id: 'dinner',
+          name: 'อาหารเย็น',
+          time: '18:30',
+          nutrition: { calories: 550, protein: 35, carbs: 45, fat: 20, fiber: 6, water: 0.5 },
+          foods: ['ปลาแซลมอนย่าง 150g', 'มันเทศ 120g', 'สลัดผัก'],
+        }
+      ],
+      totalCalories: 1550,
+      totalProtein: 100,
+      totalCarbs: 160,
+      totalFat: 50,
+      totalFiber: 19,
+      waterGoal: 2.5,
+      completed: false,
+      completionRate: 0
+    }));
+    console.log('Default nutrition plan created:', result.length, 'days');
+    return result;
   };
 
-  const targetCalories = calculateTargets();
-  const consumedCalories = meals.filter(m => m.completed).reduce((sum, m) => sum + m.calories, 0);
-  const remainingCalories = targetCalories - consumedCalories;
-
-  const toggleMealComplete = (mealId: string) => {
-    setMeals(prev => prev.map(meal => 
-      meal.id === mealId ? { ...meal, completed: !meal.completed } : meal
-    ));
-  };
-
-  const addFoodToMeal = (mealId: string, foodName: string, calories: number) => {
-    setMeals(prev => prev.map(meal => 
-      meal.id === mealId 
-        ? { 
-            ...meal, 
-            foods: [...meal.foods, foodName],
-            calories: meal.calories + calories
-          } 
-        : meal
-    ));
-  };
-
-  const removeFoodFromMeal = (mealId: string, foodIndex: number) => {
-    setMeals(prev => prev.map(meal => 
-      meal.id === mealId 
-        ? { 
-            ...meal, 
-            foods: meal.foods.filter((_, index) => index !== foodIndex),
-            calories: meal.calories - 50 // Approximate
-          } 
-        : meal
-    ));
-  };
-
-  const resetAllMeals = () => {
-    setMeals(prev => prev.map(meal => ({ ...meal, completed: false })));
-  };
-
-  const getGoalText = () => {
-    switch (userGoal) {
-      case 'weight-loss':
-        return 'ลดน้ำหนัก';
-      case 'muscle-gain':
-        return 'เพิ่มกล้ามเนื้อ';
-      default:
-        return 'รักษาระดับ';
+  const getGoalText = (goal: string) => {
+    switch (goal) {
+      case 'weight-loss': return 'ลดน้ำหนัก';
+      case 'muscle-gain': return 'เพิ่มกล้ามเนื้อ';
+      case 'maintenance': return 'รักษาน้ำหนัก';
+      default: return goal;
     }
   };
+
+  const getMealIcon = (mealId: string) => {
+    switch (mealId) {
+      case 'breakfast': return Coffee;
+      case 'snack_morning': return Apple;
+      case 'lunch': return UtensilsCrossed;
+      case 'snack_afternoon': return Apple;
+      case 'dinner': return Moon;
+      default: return ChefHat;
+    }
+  };
+
+  const selectedDayData = weeklyNutrition.find(day => day.day === selectedDay);
+  const weekProgress = weeklyNutrition.reduce((sum, day) => sum + day.completionRate, 0) / 7;
+
+  console.log('Component state:', {
+    isLoading,
+    weeklyNutritionLength: weeklyNutrition.length,
+    selectedDay,
+    selectedDayData: !!selectedDayData,
+    userGoal
+  });
+
+  console.log('Rendering component with isLoading:', isLoading);
+
+  if (isLoading) {
+    console.log('Showing loading state');
+    return (
+      <div className="space-y-6 p-6">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
+          <span className="ml-2 text-lg">กำลังโหลดแผนโภชนาการ...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show weekly nutrition even if no specific day is selected
+  if (weeklyNutrition.length === 0) {
+    console.log('No nutrition data, showing fallback');
+    return (
+      <div className="space-y-6 p-6">
+        <div className="text-center text-gray-500">
+          ไม่พบข้อมูลโภชนาการ กำลังใช้ข้อมูลเริ่มต้น...
+        </div>
+      </div>
+    );
+  }
+
+  console.log('Rendering main nutrition component');
 
   return (
-    <div className="space-y-6">
-      {/* Header with Daily Summary */}
+    <div className="space-y-6 p-6">
+      {/* Header Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Apple className="w-5 h-5" />
-            แผนการกิน - {getGoalText()}
+            <Utensils className="w-5 h-5" />
+            แผนโภชนาการ 7 วัน
           </CardTitle>
+          <CardDescription>
+            จากข้อมูล Dataset เป้าหมาย: {getGoalText(userGoal)}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary">{consumedCalories}</div>
-              <div className="text-sm text-muted-foreground">แคลอรี่ที่กิน</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary">{targetCalories}</div>
-              <div className="text-sm text-muted-foreground">เป้าหมายต่อวัน</div>
-            </div>
-            <div className="text-center">
-              <div className={`text-3xl font-bold ${remainingCalories >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {remainingCalories}
-              </div>
-              <div className="text-sm text-muted-foreground">เหลือ</div>
-            </div>
+          <div className="grid grid-cols-7 gap-2">
+            {weeklyNutrition.map((day, index) => (
+              <Button
+                key={day.day}
+                variant={selectedDay === day.day ? "default" : "outline"}
+                className="h-16 flex flex-col items-center justify-center"
+                onClick={() => setSelectedDay(day.day)}
+              >
+                <div className="text-xs font-medium">
+                  {day.day.substring(0, 3)}
+                </div>
+                <div className="text-xs text-gray-500">
+                  วันที่ {index + 1}
+                </div>
+                {day.completed && (
+                  <CheckCircle className="w-3 h-3 text-green-500 mt-1" />
+                )}
+              </Button>
+            ))}
           </div>
           
-          <div className="mb-4">
-            <div className="flex justify-between text-sm mb-2">
-              <span>ความคืบหน้าวันนี้</span>
-              <span>{Math.round((consumedCalories / targetCalories) * 100)}%</span>
+          {/* Weekly Progress */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium">ความคืบหน้าสัปดาห์</span>
+              <span className="text-sm text-gray-500">{Math.round(weekProgress)}%</span>
             </div>
-            <Progress value={(consumedCalories / targetCalories) * 100} className="h-2" />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              💡 เลือกอาหารที่หาง่ายในท้องถิ่น ไม่ต้องซับซ้อน
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={resetAllMeals}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              รีเซ็ตวันใหม่
-            </Button>
+            <Progress value={weekProgress} className="h-3" />
           </div>
         </CardContent>
       </Card>
 
-      {/* Meal Planning */}
-      <div className="grid gap-6">
-        {meals.map((meal) => (
-          <Card key={meal.id} className={meal.completed ? 'bg-green-50 dark:bg-green-900/10' : ''}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <meal.icon className="w-5 h-5" />
-                  {meal.name}
-                  <Badge variant="outline" className="ml-2">
-                    {meal.time}
-                  </Badge>
-                </CardTitle>
+      {/* Selected Day Details */}
+      {selectedDayData && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              {selectedDay} - แผนโภชนาการ
+            </CardTitle>
+            <CardDescription>
+              แคลอรี่รวม: {selectedDayData.totalCalories} kcal
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Daily Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-blue-50 p-3 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <Badge variant={meal.completed ? "default" : "secondary"}>
-                    <Flame className="w-3 h-3 mr-1" />
-                    {meal.calories} แคลอรี่
-                  </Badge>
-                  <Button
-                    variant={meal.completed ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => toggleMealComplete(meal.id)}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    {meal.completed ? 'เสร็จแล้ว' : 'ยังไม่เสร็จ'}
-                  </Button>
+                  <Target className="w-4 h-4 text-blue-500" />
+                  <span className="text-sm font-medium">แคลอรี่</span>
                 </div>
+                <div className="text-lg font-bold text-blue-600">
+                  {selectedDayData.totalCalories}
+                </div>
+                <div className="text-xs text-gray-500">kcal</div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <h4 className="font-medium mb-2">เมนูอาหาร:</h4>
-                  <div className="space-y-2">
-                    {meal.foods.map((food, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded">
-                        <span className="text-sm">{food}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFoodFromMeal(meal.id, index)}
-                          className="h-6 w-6 p-0"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
+              
+              <div className="bg-green-50 p-3 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-green-500" />
+                  <span className="text-sm font-medium">โปรตีน</span>
                 </div>
-                
-                <div className="border-t pt-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedMeal(selectedMeal === meal.id ? null : meal.id)}
-                    className="w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    เพิ่มอาหาร
-                  </Button>
-                  
-                  {selectedMeal === meal.id && (
-                    <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {COMMON_FOODS.map((food, index) => (
-                        <Button
-                          key={index}
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => addFoodToMeal(meal.id, food.name, food.calories)}
-                          className="text-xs p-2 h-auto"
-                        >
-                          <div className="text-center">
-                            <div>{food.name}</div>
-                            <div className="text-muted-foreground">{food.calories} cal</div>
-                          </div>
-                        </Button>
-                      ))}
-                    </div>
-                  )}
+                <div className="text-lg font-bold text-green-600">
+                  {Math.round(selectedDayData.totalProtein)}
                 </div>
+                <div className="text-xs text-gray-500">g</div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              
+              <div className="bg-orange-50 p-3 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Flame className="w-4 h-4 text-orange-500" />
+                  <span className="text-sm font-medium">คาร์บ</span>
+                </div>
+                <div className="text-lg font-bold text-orange-600">
+                  {Math.round(selectedDayData.totalCarbs)}
+                </div>
+                <div className="text-xs text-gray-500">g</div>
+              </div>
+              
+              <div className="bg-purple-50 p-3 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Droplets className="w-4 h-4 text-purple-500" />
+                  <span className="text-sm font-medium">น้ำ</span>
+                </div>
+                <div className="text-lg font-bold text-purple-600">
+                  {selectedDayData.waterGoal}
+                </div>
+                <div className="text-xs text-gray-500">ลิตร</div>
+              </div>
+            </div>
 
-      {/* Simple Tips */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ChefHat className="w-5 h-5" />
-            เทิปการกินที่เรียบง่าย
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 text-sm">
-            <div className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-              <span>กินข้าวกล้องแทนข้าวขาวเมื่อเป็นไปได้</span>
+            {/* Meals */}
+            <div className="space-y-4">
+              {selectedDayData.meals.map((meal) => {
+                const Icon = getMealIcon(meal.id);
+                return (
+                  <Card key={meal.id} className="border-l-4 border-l-blue-500">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Icon className="w-4 h-4" />
+                          <CardTitle className="text-lg">{meal.name}</CardTitle>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm text-gray-500">{meal.time}</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {/* Nutrition Info */}
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div className="text-center">
+                          <div className="font-medium text-blue-600">{meal.nutrition.calories}</div>
+                          <div className="text-gray-500">แคลอรี่</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-medium text-green-600">{Math.round(meal.nutrition.protein)}g</div>
+                          <div className="text-gray-500">โปรตีน</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-medium text-orange-600">{Math.round(meal.nutrition.carbs)}g</div>
+                          <div className="text-gray-500">คาร์บ</div>
+                        </div>
+                      </div>
+
+                      {/* Foods */}
+                      <div>
+                        <h4 className="font-medium mb-2">อาหารแนะนำ:</h4>
+                        <div className="grid grid-cols-1 gap-2">
+                          {meal.foods.map((food, index) => (
+                            <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                              <ChefHat className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm">{food}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {meal.note && (
+                        <div className="text-xs text-gray-600 bg-yellow-50 p-2 rounded">
+                          💡 {meal.note}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
-            <div className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-              <span>เพิ่มผักในทุกมื้อ ลวกหรือสดก็ได้</span>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Show message if no day selected */}
+      {!selectedDayData && (
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center text-gray-500">
+              <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p>เลือกวันที่ต้องการดูแผนโภชนาการ</p>
             </div>
-            <div className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-              <span>ดื่มน้ำเปล่า 8-10 แก้วต่อวัน</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-              <span>กินผลไม้แทนขนมหวาน</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-              <span>ไข่ต้ม ปลาต้ม ไก่ต้ม เป็นโปรตีนที่ดีและหาง่าย</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

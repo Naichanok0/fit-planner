@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -53,7 +53,7 @@ interface BodyMeasurements {
 interface PersonalProgramProps {
   userGoal: 'weight-loss' | 'muscle-gain' | 'maintenance';
   bodyMeasurements?: BodyMeasurements;
-  fitnessLevel: 'standard';
+  fitnessLevel?: 'standard';
   selectedExercise: string;
   onSelectExercise: (exercise: string) => void;
   onSessionComplete: (sessionData: any) => void;
@@ -598,7 +598,7 @@ const EXERCISE_DATABASE: Exercise[] = [
   // (I'll continue with additional exercises to create a comprehensive database)
 ];
 
-export function PersonalProgram({ userGoal, bodyMeasurements, fitnessLevel, selectedExercise, onSelectExercise, onSessionComplete, totalReps }: PersonalProgramProps) {
+export function PersonalProgram({ userGoal, bodyMeasurements, fitnessLevel = 'standard', selectedExercise, onSelectExercise, onSessionComplete, totalReps }: PersonalProgramProps) {
   // Removed equipment option - only bodyweight exercises
   const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
   const [currentWeek, setCurrentWeek] = useState(1);
@@ -680,7 +680,7 @@ export function PersonalProgram({ userGoal, bodyMeasurements, fitnessLevel, sele
   }, [userGoal, bodyMeasurements, fitnessLevel]);
 
   useEffect(() => {
-    if (userGoal && fitnessLevel) {
+    if (userGoal) {
       const plan = generatePersonalizedPlan();
       setSelectedPlan(plan);
     }

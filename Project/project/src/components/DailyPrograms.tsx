@@ -36,10 +36,10 @@ interface DailyProgram {
 
 interface DailyProgramsProps {
   userGoal: 'weight-loss' | 'muscle-gain' | 'maintenance';
-  fitnessLevel: 'standard';
 }
 
-export function DailyPrograms({ userGoal, fitnessLevel }: DailyProgramsProps) {
+export function DailyPrograms({ userGoal }: DailyProgramsProps) {
+  console.log('DailyPrograms component loaded with userGoal:', userGoal);
   const [currentPrograms, setCurrentPrograms] = useState<DailyProgram[]>([]);
   const [selectedDay, setSelectedDay] = useState<number>(1);
   const [activeExercise, setActiveExercise] = useState<string | null>(null);
@@ -259,6 +259,15 @@ export function DailyPrograms({ userGoal, fitnessLevel }: DailyProgramsProps) {
     return () => clearInterval(interval);
   }, [userGoal]);
 
+  // Set initial selected day to current day when programs are loaded
+  useEffect(() => {
+    if (currentPrograms.length > 0) {
+      const currentDayNumber = getCurrentDayNumber();
+      console.log('Setting initial selectedDay to current day:', currentDayNumber);
+      setSelectedDay(currentDayNumber);
+    }
+  }, [currentPrograms]);
+
   // Check for midnight and regenerate programs
   useEffect(() => {
     const checkMidnight = () => {
@@ -300,6 +309,20 @@ export function DailyPrograms({ userGoal, fitnessLevel }: DailyProgramsProps) {
   };
 
   const selectedProgram = currentPrograms.find(p => p.dayNumber === selectedDay);
+  
+  console.log('Debug state:', {
+    selectedDay,
+    currentProgramsLength: currentPrograms.length,
+    selectedProgram: !!selectedProgram,
+    availableDayNumbers: currentPrograms.map(p => p.dayNumber)
+  });
+  
+  console.log('Debug state:', {
+    selectedDay,
+    currentProgramsLength: currentPrograms.length,
+    selectedProgram: !!selectedProgram,
+    availableDayNumbers: currentPrograms.map(p => p.dayNumber)
+  });
 
   return (
     <div className="space-y-6">
@@ -332,7 +355,10 @@ export function DailyPrograms({ userGoal, fitnessLevel }: DailyProgramsProps) {
                     ? 'bg-yellow-50 border-yellow-200' 
                     : ''
             }`}
-            onClick={() => setSelectedDay(program.dayNumber)}
+            onClick={() => {
+              console.log('Clicking day:', program.dayNumber, 'Previous selectedDay:', selectedDay);
+              setSelectedDay(program.dayNumber);
+            }}
           >
             <CardContent className="p-3 text-center">
               <div className="text-xs text-gray-500 mb-1">

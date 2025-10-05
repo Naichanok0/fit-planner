@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
-import { Badge } from './components/ui/badge';
 import { Button } from './components/ui/button';
 
 import { ExerciseLibrary } from './components/ExerciseLibrary';
 import { ProgressDashboard } from './components/ProgressDashboard';
-import { BodyAnalysis } from './components/BodyAnalysis';
+import { BodyAnalysis } from './components/BodyAnalysisNew';
 import { NutritionPlanner } from './components/NutritionPlanner';
-import { DailyPrograms } from './components/DailyPrograms';
+import { PersonalizedPrograms } from './components/PersonalizedPrograms';
 import { UserProfile } from './components/UserProfile';
 import { AuthProvider, useAuth } from './components/auth/AuthProvider';
 import { LanguageProvider } from './components/language/LanguageProvider';
@@ -19,14 +17,11 @@ import {
   Camera, 
   Activity, 
   BarChart3, 
-  Timer, 
   Brain, 
-  Zap,
-  Target,
-  TrendingUp,
   Scan,
   Apple,
   User,
+  UtensilsCrossed,
   Dumbbell,
   LogOut
 } from 'lucide-react';
@@ -80,33 +75,15 @@ interface UserData {
 function MainApp() {
   const { user, logout, updateProfile } = useAuth();
   const [selectedExercise, setSelectedExercise] = useState('push-ups');
-  const [totalReps, setTotalReps] = useState(247);
-  const [currentStreak, setCurrentStreak] = useState(5);
-  const [formFeedback, setFormFeedback] = useState<string[]>([]);
-  const [sessions, setSessions] = useState<SessionData[]>([]);
-  const [bodyMeasurements, setBodyMeasurements] = useState<BodyMeasurements | null>(null);
+  const [totalReps] = useState(247);
+  const [currentStreak] = useState(5);
+  const [formFeedback] = useState<string[]>([]);
+  const [bodyTypeResult, setBodyTypeResult] = useState<{ bodyType: string; recommendations: string[] } | null>(null);
   const [activeTab, setActiveTab] = useState('body-analysis');
 
-  const handleRepCount = (count: number) => {
-    setTotalReps(prev => Math.max(prev, prev - (prev % 100) + count));
-  };
-
-  const handleFormFeedback = (feedback: string[]) => {
-    setFormFeedback(feedback);
-  };
-
-  const handleSessionComplete = (sessionData: SessionData) => {
-    setSessions(prev => [...prev, sessionData]);
-    setTotalReps(prev => prev + sessionData.reps);
-    
-    // Update streak logic would go here
-    if (sessionData.reps > 0) {
-      setCurrentStreak(prev => prev + 1);
-    }
-  };
-
-  const handleAnalysisComplete = (measurements: BodyMeasurements) => {
-    setBodyMeasurements(measurements);
+  const handleAnalysisComplete = (result: { bodyType: string; recommendations: string[] }, userData: Record<string, unknown>) => {
+    console.log('Analysis complete:', result, userData);
+    setBodyTypeResult(result);
   };
 
   const handleNavigateToProgram = () => {
@@ -223,18 +200,62 @@ function MainApp() {
 
           {/* Personal Program Tab */}
           <TabsContent value="personal-program">
-            <DailyPrograms 
-              userGoal={user?.goal || 'maintenance'}
-              fitnessLevel={'standard'}
-            />
+            {bodyTypeResult ? (
+              <PersonalizedPrograms 
+                userGoal={user?.goal || 'maintenance'}
+                bodyType={bodyTypeResult}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 p-8">
+                <div className="text-center space-y-4">
+                  <div className="w-24 h-24 mx-auto bg-blue-100 rounded-full flex items-center justify-center">
+                    <Camera className="w-12 h-12 text-blue-500" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800">ยังไม่มีข้อมูลการวิเคราะห์ร่างกาย</h3>
+                  <p className="text-gray-600 max-w-md">
+                    กรุณาไปที่หน้า "Body Analysis" เพื่ออัพโหลดรูปภาพและให้ AI วิเคราะห์ร่างกายของคุณก่อน 
+                    เพื่อสร้างโปรแกรมออกกำลังกายที่เหมาะสมกับคุณ
+                  </p>
+                  <Button 
+                    onClick={() => setActiveTab('body-analysis')}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3"
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    ไปวิเคราะห์ร่างกาย
+                  </Button>
+                </div>
+              </div>
+            )}
           </TabsContent>
 
           {/* Nutrition Tab */}
           <TabsContent value="nutrition">
-            <NutritionPlanner 
-              userGoal={user?.goal || 'maintenance'}
-              bodyMeasurements={bodyMeasurements || undefined}
-            />
+            {bodyTypeResult ? (
+              <NutritionPlanner 
+                userGoal={user?.goal || 'maintenance'}
+                bodyMeasurements={undefined}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 p-8">
+                <div className="text-center space-y-4">
+                  <div className="w-24 h-24 mx-auto bg-green-100 rounded-full flex items-center justify-center">
+                    <UtensilsCrossed className="w-12 h-12 text-green-500" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800">ยังไม่มีข้อมูลการวิเคราะห์ร่างกาย</h3>
+                  <p className="text-gray-600 max-w-md">
+                    กรุณาไปที่หน้า "Body Analysis" เพื่ออัพโหลดรูปภาพและให้ AI วิเคราะห์ร่างกายของคุณก่อน 
+                    เพื่อสร้างแผนโภชนาการที่เหมาะสมกับเป้าหมายของคุณ
+                  </p>
+                  <Button 
+                    onClick={() => setActiveTab('body-analysis')}
+                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-3"
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    ไปวิเคราะห์ร่างกาย
+                  </Button>
+                </div>
+              </div>
+            )}
           </TabsContent>
 
 

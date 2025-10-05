@@ -1,4 +1,4 @@
-import { useState, useRef, ChangeEvent } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -31,7 +31,7 @@ import {
 interface UserData {
   id: string;
   email: string;
-  phone: string;
+  phone?: string;
   firstName: string;
   lastName: string;
   age: number;
@@ -78,7 +78,7 @@ export function UserProfile({ userData, onUpdateProfile, onSecurityUpdate }: Use
     setIsEditing(false);
   };
 
-  const handleProfilePictureUpload = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePictureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       // Check file size (max 5MB)

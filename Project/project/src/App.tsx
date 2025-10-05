@@ -1,5 +1,4 @@
-console.log("🌐 API Base =", import.meta.env.VITE_API_BASE);
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Badge } from './components/ui/badge';
@@ -21,15 +20,15 @@ import {
   Activity, 
   BarChart3, 
   Timer, 
+  Brain, 
   Zap,
   Target,
   TrendingUp,
-  User,
-  Settings,
-  LogOut,
   Scan,
+  Apple,
+  User,
   Dumbbell,
-  Apple
+  LogOut
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
 import { Toaster } from './components/ui/sonner';
@@ -130,7 +129,7 @@ function MainApp() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-lg flex items-center justify-center">
-                <img src="/logo.svg" alt="AI Health App Logo" className="w-4 h-4 sm:w-6 sm:h-6 text-primary-foreground" />
+                <Brain className="w-4 h-4 sm:w-6 sm:h-6 text-primary-foreground" />
               </div>
               <div className="min-w-0">
                 <h1 className="text-lg sm:text-xl font-bold truncate">AI Health App</h1>

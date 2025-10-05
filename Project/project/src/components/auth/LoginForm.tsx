@@ -1,17 +1,17 @@
-import { useState, FormEvent } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useAuth } from './AuthProvider';
-import {
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  AlertCircle,
-  CheckCircle,
-  Loader2
+import { 
+  Mail, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  AlertCircle, 
+  Loader2,
+  Brain
 } from 'lucide-react';
 
 interface LoginFormProps {
@@ -26,7 +26,7 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
@@ -49,9 +49,9 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
         {/* Logo/Brand */}
         <div className="text-center">
           <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <img src="/logo.svg" alt="FitLife Planner Logo" className="w-8 h-8 text-primary-foreground" />
+            <Brain className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold">FitLife Planner</h1>
+          <h1 className="text-2xl font-bold">AI Health App</h1>
           <p className="text-muted-foreground">
             AI-powered body analysis and personalized programs
           </p>

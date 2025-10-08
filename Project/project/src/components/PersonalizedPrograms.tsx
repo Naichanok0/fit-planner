@@ -40,6 +40,11 @@ interface DatasetProgram {
   image: string;
   goal: string;
   weeklySchedule: DatasetDay[];
+  image_norm?: string;
+  program?: {
+    name: string;
+    [key: string]: any;
+  };
 }
 
 interface Exercise {
@@ -96,56 +101,80 @@ interface UserBodyType {
 interface PersonalizedProgramsProps {
   userGoal: 'weight-loss' | 'muscle-gain' | 'maintenance';
   bodyType?: UserBodyType;
+  detectionResult?: {
+    match_image: string;
+    distance: number;
+    gender: string;
+    workout_plan: string;
+  };
 }
 
-export function PersonalizedPrograms({ userGoal, bodyType }: PersonalizedProgramsProps) {
+export function PersonalizedPrograms({ userGoal, bodyType, detectionResult }: PersonalizedProgramsProps) {
   const [weeklyProgram, setWeeklyProgram] = useState<DayProgram[]>([]);
   const [selectedDay, setSelectedDay] = useState<string>('Monday');
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Load program data from dataset
+  // Load program data based on detection result
   useEffect(() => {
     const loadProgramData = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('/backend/dataset/metadata.json');
-        if (response.ok) {
-          const dataset = await response.json();
+        // If we have detection result, use it directly
+        if (detectionResult && detectionResult.match_image) {
+          console.log('🎯 Loading program from detection result:', detectionResult.match_image);
           
-          // Find the program that matches the user's goal
-          const matchingProgram = dataset.find((program: DatasetProgram) => 
-            program.image === 'men/1.png' && program.goal === userGoal
-          );
+          // Fetch metadata from backend
+          const metadataResponse = await fetch('http://localhost:8000/metadata');
+          if (metadataResponse.ok) {
+            const metadata = await metadataResponse.json();
+            
+            // Normalize the matched image path
+            const normalizedMatchedImage = detectionResult.match_image.replace(/men\\|men\/|women\\|women\//g, '');
+            console.log('🔍 Searching for image:', normalizedMatchedImage, 'Goal:', userGoal);
+            
+            const matchingProgram = metadata.find((program: DatasetProgram) => {
+              const isImageMatch = program.image === normalizedMatchedImage || 
+                                 program.image === detectionResult.match_image ||
+                                 program.image_norm === normalizedMatchedImage;
+              const isGoalMatch = program.goal === userGoal;
+              
+              console.log('🔍 Checking program:', program.image, 'goal:', program.goal, 'matches:', isImageMatch && isGoalMatch);
+              return isImageMatch && isGoalMatch;
+            });
 
-          if (matchingProgram && matchingProgram.weeklySchedule) {
-            const formattedProgram = matchingProgram.weeklySchedule.map((dayData: DatasetDay) => ({
-              day: dayData.day,
-              workout: {
-                id: dayData.workout.id,
-                name: dayData.workout.name,
-                duration: dayData.workout.duration,
-                targetMuscles: dayData.workout.targetMuscles || [],
-                estimatedCalories: dayData.workout.estimatedCalories || 0,
-                exercises: dayData.workout.exercises || [],
-                note: dayData.workout.note
-              },
-              meals: dayData.meals || [],
-              water: dayData.water || 2.0,
-              note: dayData.note,
-              completed: false,
-              completionRate: 0
-            }));
-            setWeeklyProgram(formattedProgram);
-          } else {
-            // Fallback to default data if no matching program found
-            setWeeklyProgram(getDefaultProgram());
+            if (matchingProgram && matchingProgram.weeklySchedule) {
+              const formattedProgram = matchingProgram.weeklySchedule.map((dayData: DatasetDay) => ({
+                day: dayData.day,
+                workout: {
+                  id: dayData.workout.id,
+                  name: dayData.workout.name,
+                  duration: dayData.workout.duration,
+                  targetMuscles: dayData.workout.targetMuscles || [],
+                  estimatedCalories: dayData.workout.estimatedCalories || 0,
+                  exercises: dayData.workout.exercises || [],
+                  note: dayData.workout.note
+                },
+                meals: dayData.meals || [],
+                water: dayData.water || 2.0,
+                note: dayData.note,
+                completed: false,
+                completionRate: 0
+              }));
+              setWeeklyProgram(formattedProgram);
+              console.log('✅ Program loaded from detection:', matchingProgram.program?.name);
+              return;
+            } else {
+              console.warn('⚠️ No matching program found for:', normalizedMatchedImage, userGoal);
+            }
           }
-        } else {
-          console.error('Failed to fetch dataset');
-          setWeeklyProgram(getDefaultProgram());
         }
+
+        // Final fallback to default program
+        console.log('⚠️ Using default program');
+        setWeeklyProgram(getDefaultProgram());
+        
       } catch (error) {
-        console.error('Error loading program data:', error);
+        console.error('❌ Error loading program data:', error);
         setWeeklyProgram(getDefaultProgram());
       } finally {
         setIsLoading(false);
@@ -153,7 +182,7 @@ export function PersonalizedPrograms({ userGoal, bodyType }: PersonalizedProgram
     };
 
     loadProgramData();
-  }, [userGoal]);
+  }, [userGoal, detectionResult]);
 
   // Fallback program if dataset fails to load
   const getDefaultProgram = (): DayProgram[] => {

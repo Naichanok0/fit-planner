@@ -68,11 +68,6 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-// expose pool and jwt secrets to routes via req.app.get(...)
-app.set('db', pool);
-app.set('jwt.access', process.env.JWT_ACCESS_SECRET || 'dev_access_secret_change_me');
-app.set('jwt.refresh', process.env.JWT_REFRESH_SECRET || 'dev_refresh_secret_change_me');
-
 // helper query
 async function q(sql, params = []) {
   const conn = await pool.getConnection();
@@ -99,8 +94,8 @@ app.get('/db/health', async (_req, res, next) => {
 });
 
 /* 🔐 Auth Routes */
-const authRoutes = require('./routes/auth');
-app.use('/auth', authRoutes);
+const authRoutes = require('./routes/auth'); // export: (q) => router
+app.use('/auth', authRoutes(q));
 
 /* (Optional) Middleware ตัวอย่าง */
 let authRequired;

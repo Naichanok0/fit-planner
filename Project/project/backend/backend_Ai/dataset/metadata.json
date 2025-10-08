@@ -1,6 +1,6 @@
 [
   {
-    "image": "men/1.png",
+    "image": "1.jpg",
     "goal": "muscle-gain",
     "weeklySchedule": [
       {
@@ -203,7 +203,7 @@
   },
 
   {
-    "image": "men/1.png",
+    "image": "1.jpg",
     "goal": "weight-loss",
     "weeklySchedule": [
       {
@@ -397,7 +397,7 @@
   },
 
   {
-    "image": "men/1.png",
+    "image": "1.jpg",
     "goal": "maintenance",
     "weeklySchedule": [
       {
@@ -591,7 +591,7 @@
 
 
   {
-    "image": "men/2.png",
+    "image": "2.jpg",
     "goal": "muscle-gain",
     "weeklySchedule": [
       {
@@ -789,7 +789,7 @@
   },
 
   {
-    "image": "men/2.png",
+    "image": "2.jpg",
     "goal": "weight-loss",
     "weeklySchedule": [
       {
@@ -981,7 +981,7 @@
   },
 
   {
-    "image": "men/2.png",
+    "image": "2.jpg",
     "goal": "maintenance",
     "weeklySchedule": [
       {
@@ -1173,7 +1173,7 @@
   },
 
   {
-  "image": "men/3.png",
+  "image": "3.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -1360,7 +1360,7 @@
     ]
   }
 },{
-  "image": "men/3.png",
+  "image": "3.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -1542,7 +1542,7 @@
     ]
   }
 },{
-  "image": "men/3.png",
+  "image": "3.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -1730,7 +1730,7 @@
 },
 
 {
-  "image": "men/4.png",
+  "image": "4.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -1926,7 +1926,7 @@
 ,
 
 {
-  "image": "men/4.png",
+  "image": "4.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -2121,7 +2121,7 @@
  ,      
 
  {
-  "image": "men/4.png",
+  "image": "4.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -2300,7 +2300,7 @@
 
 ,
 {
-  "image": "men/5.png",
+  "image": "5.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -2488,7 +2488,7 @@
 }
 ,
 {
-  "image": "men/5.png",
+  "image": "5.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -2666,7 +2666,7 @@
 }
 ,
 {
-  "image": "men/5.png",
+  "image": "5.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -2845,7 +2845,7 @@
 ,
 
 {
-  "image": "men/6.png",
+  "image": "6.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -3033,7 +3033,7 @@
 ,
 
 {
-  "image": "men/6.png",
+  "image": "6.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -3213,7 +3213,7 @@
 ,
 
 {
-  "image": "men/6.png",
+  "image": "6.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -3393,7 +3393,7 @@
 ,
 
 {
-  "image": "men/7.png",
+  "image": "7.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -3583,7 +3583,7 @@
 ,
 
 {
-  "image": "men/7.png",
+  "image": "7.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -3765,7 +3765,7 @@
 ,
 
 {
-  "image": "men/7.png",
+  "image": "7.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -3945,7 +3945,7 @@
 ,
 
 {
-  "image": "men/8.png",
+  "image": "8.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -4133,7 +4133,7 @@
 ,
 
 {
-  "image": "men/8.png",
+  "image": "8.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -4323,7 +4323,7 @@
 ,
 
 {
-  "image": "men/8.png",
+  "image": "8.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -4501,7 +4501,7 @@
 }
 ,
 {
-  "image": "men/9.png",
+  "image": "9.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -4687,7 +4687,7 @@
 }
 ,
 {
-  "image": "men/9.png",
+  "image": "9.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -4865,7 +4865,7 @@
 }
 ,
 {
-  "image": "men/9.png",
+  "image": "9.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -5044,7 +5044,7 @@
 }
 ,
 {
-  "image": "men/10.png",
+  "image": "10.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -5232,7 +5232,7 @@
 }
 ,
 {
-  "image": "men/10.png",
+  "image": "10.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -5411,7 +5411,7 @@
 ,
 
 {
-  "image": "men/10.png",
+  "image": "10.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -5589,7 +5589,7 @@
 }
 ,
 {
-  "image": "men/11.png",
+  "image": "11.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -5782,7 +5782,7 @@
 ,
 
 {
-  "image": "men/11.png",
+  "image": "11.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -5968,7 +5968,7 @@
 ,
 
 {
-  "image": "men/11.png",
+  "image": "11.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -6146,7 +6146,7 @@
 }
 ,
 {
-  "image": "men/12.png",
+  "image": "12.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -6338,7 +6338,7 @@
 ,
 
 {
-  "image": "men/12.png",
+  "image": "12.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -6518,7 +6518,7 @@
 ,
 
 {
-  "image": "men/12.png",
+  "image": "12.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -6699,7 +6699,7 @@
 ,
 
 {
-  "image": "men/13.png",
+  "image": "13.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -6888,7 +6888,7 @@
 ,
 
 {
-  "image": "men/13.png",
+  "image": "13.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -7073,7 +7073,7 @@
 ,
 
 {
-  "image": "men/13.png",
+  "image": "13.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -7252,7 +7252,7 @@
 
 ,
 {
-  "image": "men/14.png",
+  "image": "14.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -7446,7 +7446,7 @@
 ,
 
 {
-  "image": "men/14.png",
+  "image": "14.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -7632,7 +7632,7 @@
 ,
 
 {
-  "image": "men/14.png",
+  "image": "14.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -7813,7 +7813,7 @@
 ,
 
 {
-  "image": "men/15.png",
+  "image": "15.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -7999,7 +7999,7 @@
 ,
 
 {
-  "image": "men/15.png",
+  "image": "15.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -8195,7 +8195,7 @@
 }
 ,
 {
-  "image": "men/15.png",
+  "image": "15.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -8379,7 +8379,7 @@
 ,
 
 {
-  "image": "men/16.png",
+  "image": "16.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -8575,7 +8575,7 @@
 }
 ,
 {
-  "image": "men/16.png",
+  "image": "16.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -8760,7 +8760,7 @@
 ,
 
 {
-  "image": "men/16.png",
+  "image": "16.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -8944,7 +8944,7 @@
 ,
 
 {
-  "image": "men/17.png",
+  "image": "17.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -9142,7 +9142,7 @@
 
 
 {
-  "image": "men/17.png",
+  "image": "17.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -9323,7 +9323,7 @@
 ,
 
 {
-  "image": "men/17.png",
+  "image": "17.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -9506,7 +9506,7 @@
 ,
 
 {
-  "image": "men/18.png",
+  "image": "18.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -9704,7 +9704,7 @@
 ,
 
 {
-  "image": "men/18.png",
+  "image": "18.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -9888,7 +9888,7 @@
 ,
 
 {
-  "image": "men/18.png",
+  "image": "18.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -10075,7 +10075,7 @@
 ,
 
 {
-  "image": "men/19.png",
+  "image": "19.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -10272,7 +10272,7 @@
 ,
 
 {
-  "image": "men/19.png",
+  "image": "19.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -10452,7 +10452,7 @@
 ,
 
 {
-  "image": "men/19.png",
+  "image": "19.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -10640,7 +10640,7 @@
 
 
 {
-  "image": "men/20.png",
+  "image": "20.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -10837,7 +10837,7 @@
 ,
 
 {
-  "image": "men/20.png",
+  "image": "20.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -11017,7 +11017,7 @@
 ,
 
 {
-  "image": "men/20.png",
+  "image": "20.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -11201,7 +11201,7 @@
 }
 ,
 {
-  "image": "men/21.png",
+  "image": "21.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -11396,7 +11396,7 @@
 }
 ,
 {
-  "image": "men/21.png",
+  "image": "21.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -11574,7 +11574,7 @@
 }
 ,
 {
-  "image": "men/21.png",
+  "image": "21.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -11758,7 +11758,7 @@
 }
 ,
 {
-  "image": "men/22.png",
+  "image": "22.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -11950,7 +11950,7 @@
 }
 ,
 {
-  "image": "men/22.png",
+  "image": "22.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -12131,7 +12131,7 @@
 }
 ,
 {
-  "image": "men/22.png",
+  "image": "22.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -12311,7 +12311,7 @@
 }
 ,
 {
-  "image": "men/23.png",
+  "image": "23.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -12503,7 +12503,7 @@
 }
 ,
 {
-  "image": "men/23.png",
+  "image": "23.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -12684,7 +12684,7 @@
 }
 ,
 {
-  "image": "men/23.png",
+  "image": "men/23.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -12864,7 +12864,7 @@
 }
 ,
 {
-  "image": "men/24.png",
+  "image": "men/24.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -13059,7 +13059,7 @@
 }
 ,
 {
-  "image": "men/24.png",
+  "image": "men/24.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -13241,7 +13241,7 @@
 }
 ,
 {
-  "image": "men/24.png",
+  "image": "men/24.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -13422,7 +13422,7 @@
 
 ,
 {
-  "image": "men/25.png",
+  "image": "men/25.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -13616,7 +13616,7 @@
 ,
 
 {
-  "image": "men/25.png",
+  "image": "men/25.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -13803,7 +13803,7 @@
 ,
 
 {
-  "image": "men/25.png",
+  "image": "men/25.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -13983,7 +13983,7 @@
 }
 ,
 {
-  "image": "women/26.png",
+  "image": "26.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -14166,7 +14166,7 @@
 }
 ,
 {
-  "image": "women/26.png",
+  "image": "26.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -14350,7 +14350,7 @@
 }
 ,
 {
-  "image": "women/26.png",
+  "image": "26.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -14531,7 +14531,7 @@
 ,
 
 {
-  "image": "women/27.png",
+  "image": "27.jpg",
   "goal": "weight-loss",
   "weeklySchedule": [
     {
@@ -14716,7 +14716,7 @@
 ,
 
 {
-  "image": "women/27.png",
+  "image": "27.jpg",
   "goal": "muscle-gain",
   "weeklySchedule": [
     {
@@ -14903,7 +14903,7 @@
 ,
 
 {
-  "image": "women/27.png",
+  "image": "27.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -15083,7 +15083,7 @@
 ,
 
 {
-  "image": "women/28.png",
+  "image": "28.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -15258,7 +15258,7 @@
 ,
 
 {
-  "image": "women/28.png",
+  "image": "28.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -15443,7 +15443,7 @@
 ,
 
 {
-  "image": "women/28.png",
+  "image": "28.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -15624,7 +15624,7 @@
 ,
 
 {
-  "image": "women/29.png",
+  "image": "29.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -15813,7 +15813,7 @@
 ,
 
 {
-  "image": "women/29.png",
+  "image": "29.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -15996,7 +15996,7 @@
 ,
 
 {
-  "image": "women/29.png",
+  "image": "29.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -16175,7 +16175,7 @@
 }
 ,
 {
-  "image": "women/30.png",
+  "image": "30.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -16361,7 +16361,7 @@
 }
 ,
 {
-  "image": "women/30.png",
+  "image": "30.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -16539,7 +16539,7 @@
 }
 ,
 {
-  "image": "women/30.png",
+  "image": "30.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -16717,7 +16717,7 @@
 }
 ,
 {
-  "image": "women/31.png",
+  "image": "31.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -16909,7 +16909,7 @@
 }
 ,
 {
-  "image": "women/31.png",
+  "image": "31.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -17094,7 +17094,7 @@
 }
 ,
 {
-  "image": "women/31.png",
+  "image": "31.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -17280,7 +17280,7 @@
 }
 ,
 {
-  "image": "women/32.png",
+  "image": "32.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -17472,7 +17472,7 @@
 }
 ,
 {
-  "image": "women/32.png",
+  "image": "32.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -17657,7 +17657,7 @@
 }
 ,
 {
-  "image": "women/32.png",
+  "image": "32.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -17846,7 +17846,7 @@
 }
 ,
 {
-  "image": "women/33.png",
+  "image": "33.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -18038,7 +18038,7 @@
 }
 ,
 {
-  "image": "women/33.png",
+  "image": "33.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -18222,7 +18222,7 @@
 }
 ,
 {
-  "image": "women/33.png",
+  "image": "33.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -18404,7 +18404,7 @@
 }
 ,
 {
-  "image": "women/34.png",
+  "image": "34.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -18598,7 +18598,7 @@
 ,
 
 {
-  "image": "women/34.png",
+  "image": "34.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -18782,7 +18782,7 @@
 }
 ,
 {
-  "image": "women/34.png",
+  "image": "34.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -18969,7 +18969,7 @@
 }
 ,
 {
-  "image": "women/35.png",
+  "image": "35.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -19161,7 +19161,7 @@
 }
 ,
 {
-  "image": "women/35.png",
+  "image": "35.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -19340,7 +19340,7 @@
 }
 ,
 {
-  "image": "women/35.png",
+  "image": "35.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -19517,7 +19517,7 @@
 }
 ,
 {
-  "image": "women/36.png",
+  "image": "36.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -19704,7 +19704,7 @@
 
 ,
 {
-  "image": "women/36.png",
+  "image": "36.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -19882,7 +19882,7 @@
 }
 ,
 {
-  "image": "women/36.png",
+  "image": "36.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -20062,7 +20062,7 @@
 ,
 
 {
-  "image": "women/37.png",
+  "image": "37.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -20249,7 +20249,7 @@
 ,
 
 {
-  "image": "women/37.png",
+  "image": "37.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -20430,7 +20430,7 @@
 ,
 
 {
-  "image": "women/37.png",
+  "image": "37.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -20608,7 +20608,7 @@
 ,
 
 {
-  "image": "women/38.png",
+  "image": "38.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -20794,7 +20794,7 @@
 }
 ,
 {
-  "image": "women/38.png",
+  "image": "38.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -20973,7 +20973,7 @@
 }
 ,
 {
-  "image": "women/38.png",
+  "image": "38.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -21151,7 +21151,7 @@
 ,
 
 {
-  "image": "women/39.png",
+  "image": "39.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -21338,7 +21338,7 @@
 
 ,
 {
-  "image": "women/39.png",
+  "image": "39.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -21527,7 +21527,7 @@
 ,
 
 {
-  "image": "women/39.png",
+  "image": "39.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -21708,7 +21708,7 @@
 ,
 
 {
-  "image": "women/40.png",
+  "image": "40.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -21894,7 +21894,7 @@
 }
 ,
 {
-  "image": "women/40.png",
+  "image": "40.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -22058,7 +22058,7 @@
 }
 ,
 {
-  "image": "women/40.png",
+  "image": "40.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -22227,7 +22227,7 @@
 }
 ,
 {
-  "image": "women/41.png",
+  "image": "41.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -22419,7 +22419,7 @@
 }
 ,
 {
-  "image": "women/41.png",
+  "image": "41.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -22588,7 +22588,7 @@
 }
 ,
 {
-  "image": "women/41.png",
+  "image": "41.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -22756,7 +22756,7 @@
 
 ,
 {
-  "image": "women/42.png",
+  "image": "42.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -22930,7 +22930,7 @@
 }
 ,
 {
-  "image": "women/42.png",
+  "image": "42.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -23101,7 +23101,7 @@
 ,
 
 {
-  "image": "women/42.png",
+  "image": "42.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -23266,7 +23266,7 @@
 
 ,
 {
-  "image": "women/43.png",
+  "image": "43.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -23453,7 +23453,7 @@
 }
 ,
 {
-  "image": "women/43.png",
+  "image": "43.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -23638,7 +23638,7 @@
 }
 ,
 {
-  "image": "women/43.png",
+  "image": "43.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -23817,7 +23817,7 @@
 }
 ,
 {
-  "image": "women/44.png",
+  "image": "44.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -23981,7 +23981,7 @@
 }
 ,
 {
-  "image": "women/44.png",
+  "image": "44.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -24153,7 +24153,7 @@
 }
 ,
 {
-  "image": "women/44.png",
+  "image": "44.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -24314,7 +24314,7 @@
 }
 ,
 {
-  "image": "women/45.png",
+  "image": "45.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -24500,7 +24500,7 @@
 }
 ,
 {
-  "image": "women/45.png",
+  "image": "45.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -24686,7 +24686,7 @@
 }
 ,
 {
-  "image": "women/45.png",
+  "image": "45.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -24864,7 +24864,7 @@
 }
 ,
 {
-  "image": "women/46.png",
+  "image": "46.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -25051,7 +25051,7 @@
 
 ,
 {
-  "image": "women/46.png",
+  "image": "46.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -25234,7 +25234,7 @@
 }
 ,
 {
-  "image": "women/46.png",
+  "image": "46.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -25412,7 +25412,7 @@
 }
 ,
 {
-  "image": "women/47.png",
+  "image": "47.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -25598,7 +25598,7 @@
 }
 ,
 {
-  "image": "women/47.png",
+  "image": "47.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -25781,7 +25781,7 @@
 }
 ,
 {
-  "image": "women/47.png",
+  "image": "47.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -25960,7 +25960,7 @@
 }
 ,
 {
-  "image": "women/47.png",
+  "image": "47.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -26139,7 +26139,7 @@
 }
 ,
 {
-  "image": "women/48.png",
+  "image": "48.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -26325,7 +26325,7 @@
 }
 ,
 {
-  "image": "women/48.png",
+  "image": "48.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -26508,7 +26508,7 @@
 }
 ,
 {
-  "image": "women/48.png",
+  "image": "48.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -26687,7 +26687,7 @@
 }
 ,
 {
-  "image": "women/49.jpg",
+  "image": "49.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -26874,7 +26874,7 @@
 ,
 
 {
-  "image": "women/49.jpg",
+  "image": "49.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -27058,7 +27058,7 @@
 ,
 
 {
-  "image": "women/49.jpg",
+  "image": "49.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {
@@ -27237,7 +27237,7 @@
 }
 ,
 {
-  "image": "women/50.jpg",
+  "image": "50.jpg",
   "goal": "muscle_gain",
   "weeklySchedule": [
     {
@@ -27423,7 +27423,7 @@
 }
 ,
 {
-  "image": "women/50.jpg",
+  "image": "50.jpg",
   "goal": "weight_loss",
   "weeklySchedule": [
     {
@@ -27606,7 +27606,7 @@
 }
 ,
 {
-  "image": "women/50.jpg",
+  "image": "50.jpg",
   "goal": "maintenance",
   "weeklySchedule": [
     {

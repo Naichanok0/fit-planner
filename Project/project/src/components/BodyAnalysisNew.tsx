@@ -41,7 +41,7 @@ interface UserData {
 }
 
 interface BodyAnalysisProps {
-  onAnalysisComplete: (result: BodyAnalysisResult, userData: UserData) => void;
+  onAnalysisComplete: (result: BodyAnalysisResult, userData: UserData, detectionResult?: any) => void;
   userGoal: 'weight-loss' | 'muscle-gain' | 'maintenance';
   fitnessLevel: 'standard';
   onNavigateToProgram: () => void;
@@ -52,6 +52,7 @@ export function BodyAnalysis({ onAnalysisComplete, userGoal, onNavigateToProgram
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<BodyAnalysisResult | null>(null);
+  const [detectionResult, setDetectionResult] = useState<any>(null);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState<'upload' | 'analyze' | 'form' | 'complete'>('upload');
   const [userData, setUserData] = useState<UserData>({
@@ -96,64 +97,74 @@ export function BodyAnalysis({ onAnalysisComplete, userGoal, onNavigateToProgram
     setIsAnalyzing(true);
     setAnalysisProgress(0);
 
-    // Simulate AI analysis process
-    const progressSteps = [
-      { progress: 20, message: 'กำลังประมวลผลรูปภาพ...' },
-      { progress: 40, message: 'กำลังวิเคราะห์รูปร่าง...' },
-      { progress: 60, message: 'กำลังคำนวณสัดส่วนร่างกาย...' },
-      { progress: 80, message: 'กำลังสร้างคำแนะนำ...' },
-      { progress: 100, message: 'เสร็จสิ้น!' }
-    ];
+    try {
+      // Show progress steps
+      const progressSteps = [
+        { progress: 20, message: 'กำลังอัปโหลดรูปภาพ...' },
+        { progress: 40, message: 'กำลัง AI วิเคราะห์รูปร่าง...' },
+        { progress: 60, message: 'กำลังค้นหารูปที่คล้ายกัน...' },
+        { progress: 80, message: 'กำลังสร้างโปรแกรมเฉพาะตัว...' },
+        { progress: 100, message: 'เสร็จสิ้น!' }
+      ];
 
-    for (const step of progressSteps) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setAnalysisProgress(step.progress);
-    }
+      // Show initial progress
+      for (let i = 0; i < 2; i++) {
+        setAnalysisProgress(progressSteps[i].progress);
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
 
-    // Mock analysis result based on goal
-    const mockResults: Record<string, BodyAnalysisResult> = {
-      'muscle-gain': {
+      // Call Python AI detection API
+      const formData = new FormData();
+      formData.append('file', selectedImage);
+      formData.append('gender', userData.gender || 'men');
+
+      const response = await fetch('http://localhost:8000/detect/', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`การวิเคราะห์ล้มเหลว: ${response.status} ${response.statusText}`);
+      }
+
+      const detectionData = await response.json();
+      console.log('🎯 Detection result:', detectionData);
+
+      // Store detection result in state instead of localStorage
+      setDetectionResult(detectionData);
+
+      // Continue progress
+      for (let i = 2; i < progressSteps.length; i++) {
+        setAnalysisProgress(progressSteps[i].progress);
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+
+      // Create analysis result from detection
+      const analysisResult: BodyAnalysisResult = {
         detectedType: 'average',
-        confidence: 0.87,
+        confidence: Math.max(0.7, 1 - (detectionData.distance || 0) / 2), // Convert distance to confidence
         bodyFatPercentage: 15,
         muscleDistribution: { upper: 65, lower: 70, core: 60 },
         recommendations: [
-          'เน้นการเพิ่มกล้ามเนื้อส่วนบน แขน และหน้าอก',
-          'เพิ่มปริมาณโปรตีนเป็น 1.6-2.2g ต่อน้ำหนักตัว 1kg',
-          'ออกกำลังกายด้วยน้ำหนัก 3-4 วันต่อสัปดาห์',
-          'พักผ่อนให้เพียงพอ 7-9 ชั่วโมงต่อวัน เพื่อการฟื้นฟูกล้ามเนื้อ'
+          `🎯 ระบบตรวจพบว่าคุณคล้ายกับรูปแบบ ${detectionData.match_image}`,
+          `📊 ความแม่นยำ: ${((1 - (detectionData.distance || 0) / 2) * 100).toFixed(1)}%`,
+          '🏋️ โปรแกรมออกกำลังกายและอาหารได้ถูกปรับแต่งเฉพาะสำหรับคุณ',
+          '📅 ปฏิบัติตามโปรแกรมอย่างสม่ำเสมอ 4-6 สัปดาห์เพื่อผลลัพธ์ที่ดีที่สุด'
         ]
-      },
-      'weight-loss': {
-        detectedType: 'heavy',
-        confidence: 0.92,
-        bodyFatPercentage: 25,
-        muscleDistribution: { upper: 55, lower: 60, core: 50 },
-        recommendations: [
-          'เน้นคาร์ดิโอและ HIIT เพื่อเผาผลาญไขมัน',
-          'ลดแคลอรี่ได้ 500-750 แคลอรี่ต่อวัน',
-          'เพิ่มการดื่มน้ำเป็น 2.5-3 ลิตรต่อวัน',
-          'รับประทานอาหารหลายมื้อเล็กๆ เพื่อเร่งเมแทบอลิซึม'
-        ]
-      },
-      'maintenance': {
-        detectedType: 'average',
-        confidence: 0.85,
-        bodyFatPercentage: 18,
-        muscleDistribution: { upper: 60, lower: 65, core: 55 },
-        recommendations: [
-          'รักษาการออกกำลังกายสม่ำเสมอ 150 นาทีต่อสัปดาห์',
-          'รับประทานอาหารครบ 5 หมู่ในสัดส่วนที่เหมาะสม',
-          'เน้นความยืดหยุ่นและความแข็งแกร่งของแกนกลาง',
-          'ตรวจสุขภาพเป็นประจำและปรับโปรแกรมตามความเหมาะสม'
-        ]
-      }
-    };
+      };
 
-    const result = mockResults[userGoal];
-    setAnalysisResult(result);
-    setIsAnalyzing(false);
-    setCurrentStep('form');
+      setAnalysisResult(analysisResult);
+      
+    } catch (error) {
+      console.error('❌ Analysis error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ';
+      alert('เกิดข้อผิดพลาดในการวิเคราะห์: ' + errorMessage + '\n\nกรุณาตรวจสอบว่า:\n- Python backend รันอยู่ที่ port 8000\n- รูปภาพมีขนาดไม่เกิน 10MB\n- เครื่องเชื่อมต่ออินเทอร์เน็ต');
+      setAnalysisProgress(0);
+      return;
+    } finally {
+      setIsAnalyzing(false);
+      setCurrentStep('form');
+    }
   };
 
   const handleUserDataChange = (field: keyof UserData, value: string) => {
@@ -165,10 +176,13 @@ export function BodyAnalysis({ onAnalysisComplete, userGoal, onNavigateToProgram
            userData.gender && userData.goal;
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (analysisResult && isFormComplete()) {
       setCurrentStep('complete');
-      onAnalysisComplete(analysisResult, userData);
+      
+      // Pass detection result directly to parent component
+      console.log('✅ Analysis complete, passing detection result:', detectionResult);
+      onAnalysisComplete(analysisResult, userData, detectionResult);
     }
   };
 
@@ -176,6 +190,7 @@ export function BodyAnalysis({ onAnalysisComplete, userGoal, onNavigateToProgram
     setSelectedImage(null);
     setImagePreview(null);
     setAnalysisResult(null);
+    setDetectionResult(null);
     setAnalysisProgress(0);
     setCurrentStep('upload');
     setUserData({

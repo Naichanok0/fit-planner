@@ -79,11 +79,13 @@ function MainApp() {
   const [currentStreak] = useState(5);
   const [formFeedback] = useState<string[]>([]);
   const [bodyTypeResult, setBodyTypeResult] = useState<{ bodyType: string; recommendations: string[] } | null>(null);
+  const [detectionResult, setDetectionResult] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('body-analysis');
 
-  const handleAnalysisComplete = (result: { bodyType: string; recommendations: string[] }, userData: Record<string, unknown>) => {
-    console.log('Analysis complete:', result, userData);
+  const handleAnalysisComplete = (result: { bodyType: string; recommendations: string[] }, userData: Record<string, unknown>, detectionData?: any) => {
+    console.log('Analysis complete:', result, userData, detectionData);
     setBodyTypeResult(result);
+    setDetectionResult(detectionData);
   };
 
   const handleNavigateToProgram = () => {
@@ -228,6 +230,7 @@ function MainApp() {
               <PersonalizedPrograms 
                 userGoal={user?.goal || 'maintenance'}
                 bodyType={bodyTypeResult}
+                detectionResult={detectionResult}
               />
             ) : (
               <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 p-8">

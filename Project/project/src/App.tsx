@@ -91,7 +91,31 @@ function MainApp() {
   };
 
   const handleUpdateProfile = (data: Partial<UserData>) => {
-    updateProfile(data);
+    // Persist changes to backend and update local auth state
+    (async () => {
+      try {
+        // useAuth's apiFetch is available via the hook; but we are inside App, so call updateProfile (which updates local state)
+        // To persist, call the backend PATCH /auth/me
+        // Get access to apiFetch by calling useAuth() here would be invalid; instead, updateProfile will persist via AuthProvider if needed.
+        // Fallback: call global fetch to PATCH endpoint
+        await fetch('/auth/me', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firstName: data.firstName,
+            lastName: data.lastName,
+            age: data.age,
+            gender: data.gender,
+            fitnessLevel: data.fitnessLevel,
+            goal: data.goal,
+            phone: (data as any).phone
+          })
+        });
+      } catch (e) {
+        console.error('Failed to persist profile update', e);
+      }
+      updateProfile(data);
+    })();
   };
 
   const handleSecurityUpdate = () => {

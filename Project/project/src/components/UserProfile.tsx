@@ -52,7 +52,23 @@ interface UserProfileProps {
 export function UserProfile({ userData, onUpdateProfile, onSecurityUpdate }: UserProfileProps) {
   const { currentLanguage, setLanguage, t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<UserData>(userData);
+  // ensure no null values are stored in formData (controlled inputs must not receive null)
+  const sanitizeUser = (u: Partial<UserData> | UserData) => ({
+    id: String(u?.id ?? ''),
+    email: String(u?.email ?? ''),
+    phone: (u?.phone ?? '') as string,
+    firstName: String(u?.firstName ?? ''),
+    lastName: String(u?.lastName ?? ''),
+    age: Number(u?.age ?? 0),
+    gender: (u?.gender ?? 'male') as 'male' | 'female',
+    fitnessLevel: (u?.fitnessLevel ?? 'standard') as 'standard',
+    goal: (u?.goal ?? 'maintenance') as 'weight-loss' | 'muscle-gain' | 'maintenance',
+    joinDate: (u && u.joinDate) ? new Date(u.joinDate) : new Date(),
+    lastLogin: (u && u.lastLogin) ? new Date(u.lastLogin) : new Date(),
+    profilePicture: (u && (u as any).profilePicture) ? String((u as any).profilePicture) : undefined,
+  });
+
+  const [formData, setFormData] = useState<UserData>(() => sanitizeUser(userData) as UserData);
   const [activeTab, setActiveTab] = useState<'profile' | 'settings' | 'security' | 'data'>('profile');
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -73,7 +89,7 @@ export function UserProfile({ userData, onUpdateProfile, onSecurityUpdate }: Use
   };
 
   const handleCancel = () => {
-    setFormData(userData);
+    setFormData(sanitizeUser(userData) as UserData);
     setProfilePicture(userData.profilePicture || null);
     setIsEditing(false);
   };
@@ -158,6 +174,18 @@ export function UserProfile({ userData, onUpdateProfile, onSecurityUpdate }: Use
     }
   };
 
+  // Safe initials helper: avoid calling charAt on undefined values which crashes React render
+  const getInitials = () => {
+    const fn = (formData && formData.firstName) ? String(formData.firstName) : '';
+    const ln = (formData && formData.lastName) ? String(formData.lastName) : '';
+    const a = fn.trim();
+    const b = ln.trim();
+    if (!a && !b) return '?';
+    const first = a ? a.charAt(0).toUpperCase() : '';
+    const last = b ? b.charAt(0).toUpperCase() : '';
+    return (first + last) || (first || last) || '?';
+  };
+
   return (
     <div className="space-y-6">
       {/* Profile Header */}
@@ -196,7 +224,7 @@ export function UserProfile({ userData, onUpdateProfile, onSecurityUpdate }: Use
               <Avatar className="w-20 h-20 sm:w-24 sm:h-24">
                 <AvatarImage src={profilePicture || undefined} alt={`${formData.firstName} ${formData.lastName}`} />
                 <AvatarFallback className="text-2xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground">
-                  {formData.firstName.charAt(0)}{formData.lastName.charAt(0)}
+                  {getInitials()}
                 </AvatarFallback>
               </Avatar>
               

@@ -1,5 +1,5 @@
 // src/contexts/AuthProvider.tsx
-import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 
 type Gender = 'male' | 'female';
 type Goal = 'weight-loss' | 'muscle-gain' | 'maintenance';
@@ -108,14 +108,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async <T = any>(path: string, init: RequestInit = {}) => {
       const url = `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`;
 
-      const withAuth = (token: string): RequestInit => ({
-        ...init,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(init.headers || {}),
-          Authorization: token ? `Bearer ${token}` : undefined,
-        },
-      });
+      const withAuth = (token: string): RequestInit => {
+        const baseHeaders = { 'Content-Type': 'application/json', ...(init.headers || {}) } as Record<string, string>;
+        if (token) baseHeaders.Authorization = `Bearer ${token}`;
+        return { ...init, headers: baseHeaders };
+      };
 
       // ยิงด้วย access token ปัจจุบันก่อน
       let res = await fetch(url, withAuth(getAccess()));
@@ -149,6 +146,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     []
   );
+
+    // On mount, if there's an access token, try to hydrate user from backend (/auth/me)
+    useEffect(() => {
+      const at = getAccess();
+      if (!at) return;
+
+      (async () => {
+        try {
+          const data = await apiFetch('/auth/me');
+          const u = normalizeUser(data);
+          setUser(u);
+          saveUser(u);
+        } catch (e) {
+          // ignore, user remains null
+          console.debug('hydrate user failed:', e);
+        }
+      })();
+    }, [apiFetch]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {

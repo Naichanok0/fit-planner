@@ -1,4 +1,3 @@
-
 # backend_Ai/main.py
 # Clean merge: รวมฟีเจอร์ทั้งสองฝั่ง (JSONResponse/metadata + OpenCV/cv2 + Optional typing)
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
@@ -7,18 +6,57 @@ from fastapi.responses import JSONResponse
 import uvicorn
 import numpy as np
 import os
-import faiss
 import json
 import cv2
 from typing import Optional
+import base64
 
-from model import base_model, preprocess_fn
-from utils import get_embedding_tta, estimate_chest_circumference_cm
-from detector import BodyDetector
-from validators import (
-    is_full_body_landmarks, frontal_pose_ok, arms_clear_torso,
-    body_height_norm, chest_line_points, L_SHOULDER, R_SHOULDER, L_HIP, R_HIP
-)
+# Optional imports - graceful fallback if not installed
+try:
+    import faiss
+    HAS_FAISS = True
+except ImportError:
+    HAS_FAISS = False
+    faiss = None
+
+try:
+    from model import base_model, preprocess_fn
+    HAS_MODEL = True
+except ImportError:
+    HAS_MODEL = False
+    base_model = None
+    preprocess_fn = None
+
+try:
+    from utils import get_embedding_tta, estimate_chest_circumference_cm
+    HAS_UTILS = True
+except ImportError:
+    HAS_UTILS = False
+    get_embedding_tta = None
+    estimate_chest_circumference_cm = None
+
+try:
+    from detector import BodyDetector
+    HAS_DETECTOR = True
+except ImportError:
+    HAS_DETECTOR = False
+    BodyDetector = None
+
+try:
+    from validators import (
+        is_full_body_landmarks, frontal_pose_ok, arms_clear_torso,
+        body_height_norm, chest_line_points, L_SHOULDER, R_SHOULDER, L_HIP, R_HIP
+    )
+    HAS_VALIDATORS = True
+except ImportError:
+    HAS_VALIDATORS = False
+    # Mock functions as fallback
+    def is_full_body_landmarks(lm): return True
+    def frontal_pose_ok(lm): return True
+    def arms_clear_torso(lm): return True
+    def body_height_norm(lm, img_h): return 0.6
+    def chest_line_points(lm): return [(0,0), (0,0)]
+    L_SHOULDER = R_SHOULDER = L_HIP = R_HIP = 0
 
 app = FastAPI(title="Body Image Retrieval + Chest API")
 
@@ -47,7 +85,7 @@ paths_women: list[str] = []
 index_women = None
 
 # Pose detector (ใช้ซ้ำ)
-pose_detector: Optional[BodyDetector] = None
+pose_detector = None  # BodyDetector instance
 
 
 @app.on_event("startup")
@@ -55,14 +93,25 @@ async def startup_event():
     global pose_detector
     print("🔄 Loading dataset embeddings...")
     load_dataset()
-    print("🔄 Initializing BodyDetector...")
-    pose_detector = BodyDetector(
-        model_complexity=1,
-        enable_segmentation=False,
-        min_detection_confidence=0.5,
-        min_tracking_confidence=0.5,
-        smooth_landmarks=True,
-    )
+    
+    if HAS_DETECTOR:
+        print("🔄 Initializing BodyDetector...")
+        try:
+            pose_detector = BodyDetector(
+                model_complexity=1,
+                enable_segmentation=False,
+                min_detection_confidence=0.5,
+                min_tracking_confidence=0.5,
+                smooth_landmarks=True,
+            )
+            print("✅ BodyDetector initialized")
+        except Exception as e:
+            print(f"⚠️  BodyDetector failed: {e}")
+            print("⚠️  Continuing without pose detection")
+            pose_detector = None
+    else:
+        print("⚠️  BodyDetector not available - using mock mode")
+        pose_detector = None
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -146,7 +195,7 @@ def load_dataset():
     print(f"✅ Loaded: all={len(paths_all)}, men={len(paths_men)}, women={len(paths_women)}, dim={emb_all.shape[1]}")
 
 
-def _search_and_rerank(q: np.ndarray, X: np.ndarray, paths: list, index: faiss.IndexFlatL2):
+def _search_and_rerank(q: np.ndarray, X: np.ndarray, paths: list, index):
     """
     ค้นหา top-k ด้วย FAISS แล้ว re-rank ด้วย cosine (dot product บนเวกเตอร์ normalize)
     คืน (rel_path, faiss_distance)

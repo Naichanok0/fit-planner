@@ -133,6 +133,15 @@ try {
   console.warn('[routes] Analysis routes not found:', e.message);
 }
 
+/* 🎯 Triggers Routes */
+try {
+  const triggersRoutes = require('./routes/triggers');
+  app.use('/api/triggers', triggersRoutes(q));
+  console.log('[routes] Triggers routes loaded');
+} catch (e) {
+  console.warn('[routes] Triggers routes not found:', e.message);
+}
+
 /* (Optional) Middleware ตัวอย่าง */
 let authRequired;
 try {

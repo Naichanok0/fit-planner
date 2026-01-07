@@ -28,18 +28,24 @@ module.exports = function buildAuthRoutes(q) {
       if (exists.length) return res.status(409).json({ error: 'Email already registered' });
 
       const hash = await bcrypt.hash(password, 10);
-      const r = await q(
+      await q(
         `INSERT INTO users (email, password_hash, first_name, last_name, age, gender, fitness_level, goal, join_date, last_login)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
         [email, hash, firstName || null, lastName || null, age || null, gender || null, fitnessLevel || null, goal || null]
       );
 
-      const user = { id: r.insertId, email };
+      // Get the newly created user
+      const users = await q('SELECT id FROM users WHERE email=?', [email]);
+      const user = { id: users[0].id, email };
+      
       const access  = signAccess(user);
       const refresh = signRefresh(user);
-      await q('INSERT INTO refresh_tokens (user_id, token) VALUES (?, ?)', [user.id, refresh]);
+      
+      // Insert refresh token with expires_at (30 days from now)
+      const expiresAt = new Date(Date.now() + REFRESH_TTL * 1000).toISOString().slice(0, 19).replace('T', ' ');
+      await q('INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)', [user.id, refresh, expiresAt]);
 
-      res.json({ user: { id: user.id, email, firstName, lastName, age, gender, fitnessLevel, goal }, access, refresh });
+      res.json({ user: { id: user.id, email, firstName, lastName, age, gender, fitnessLevel, goal }, accessToken: access, refreshToken: refresh });
     } catch (e) { next(e); }
   });
 
@@ -59,14 +65,17 @@ module.exports = function buildAuthRoutes(q) {
       const user = { id: u.id, email: u.email };
       const access  = signAccess(user);
       const refresh = signRefresh(user);
-      await q('INSERT INTO refresh_tokens (user_id, token) VALUES (?, ?)', [user.id, refresh]);
+      
+      // Insert refresh token with expires_at (30 days from now)
+      const expiresAt = new Date(Date.now() + REFRESH_TTL * 1000).toISOString().slice(0, 19).replace('T', ' ');
+      await q('INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)', [user.id, refresh, expiresAt]);
 
       res.json({
         user: {
           id: u.id, email: u.email, firstName: u.first_name, lastName: u.last_name,
           age: u.age, gender: u.gender, fitnessLevel: u.fitness_level, goal: u.goal
         },
-        access, refresh
+        accessToken: access, refreshToken: refresh
       });
     } catch (e) { next(e); }
   });

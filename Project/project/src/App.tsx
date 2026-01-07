@@ -80,12 +80,14 @@ function MainApp() {
   const [formFeedback] = useState<string[]>([]);
   const [bodyTypeResult, setBodyTypeResult] = useState<{ bodyType: string; recommendations: string[] } | null>(null);
   const [detectionResult, setDetectionResult] = useState<any>(null);
+  const [userAnalysisData, setUserAnalysisData] = useState<Record<string, unknown> | null>(null);
   const [activeTab, setActiveTab] = useState('body-analysis');
 
   const handleAnalysisComplete = (result: { bodyType: string; recommendations: string[] }, userData: Record<string, unknown>, detectionData?: any) => {
     console.log('Analysis complete:', result, userData, detectionData);
     setBodyTypeResult(result);
     setDetectionResult(detectionData);
+    setUserAnalysisData(userData); // Store user data for BMI calculation
   };
 
   const handleNavigateToProgram = () => {
@@ -135,9 +137,9 @@ function MainApp() {
                 <Brain className="w-4 h-4 sm:w-6 sm:h-6 text-primary-foreground" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl font-bold truncate">AI Health App</h1>
+                <h1 className="text-lg sm:text-xl font-bold truncate">Fit Planner</h1>
                 <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
-                  AI-powered body analysis and personalized programs
+                  Your Personal Fitness Planning Assistant
                 </p>
               </div>
             </div>
@@ -303,6 +305,8 @@ function MainApp() {
               totalReps={totalReps}
               currentStreak={currentStreak}
               formFeedback={formFeedback}
+              userHeight={userAnalysisData?.height ? parseFloat(userAnalysisData.height as string) : undefined}
+              userWeight={userAnalysisData?.weight ? parseFloat(userAnalysisData.weight as string) : undefined}
             />
           </TabsContent>
 

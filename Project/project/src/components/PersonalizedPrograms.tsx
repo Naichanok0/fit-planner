@@ -106,6 +106,9 @@ interface PersonalizedProgramsProps {
     distance: number;
     gender: string;
     workout_plan: string;
+    goal?: string;
+    confidence?: number;
+    mode?: string;
   };
 }
 
@@ -121,22 +124,26 @@ export function PersonalizedPrograms({ userGoal, bodyType, detectionResult }: Pe
       try {
         // If we have detection result, use it directly
         if (detectionResult && detectionResult.match_image) {
-          console.log('🎯 Loading program from detection result:', detectionResult.match_image);
+          console.log('🎯 Loading program from detection result:', detectionResult);
           
           // Fetch metadata from backend
           const metadataResponse = await fetch('http://localhost:8000/metadata');
           if (metadataResponse.ok) {
             const metadata = await metadataResponse.json();
+            console.log('📊 Total programs loaded:', metadata.length);
             
             // Normalize the matched image path
             const normalizedMatchedImage = detectionResult.match_image.replace(/men\\|men\/|women\\|women\//g, '');
-            console.log('🔍 Searching for image:', normalizedMatchedImage, 'Goal:', userGoal);
+            
+            // Use goal from detection result or fallback to userGoal
+            const targetGoal = detectionResult.goal || userGoal;
+            console.log('🔍 Searching for - Image:', normalizedMatchedImage, 'Goal:', targetGoal);
             
             const matchingProgram = metadata.find((program: DatasetProgram) => {
               const isImageMatch = program.image === normalizedMatchedImage || 
                                  program.image === detectionResult.match_image ||
                                  program.image_norm === normalizedMatchedImage;
-              const isGoalMatch = program.goal === userGoal;
+              const isGoalMatch = program.goal === targetGoal;
               
               console.log('🔍 Checking program:', program.image, 'goal:', program.goal, 'matches:', isImageMatch && isGoalMatch);
               return isImageMatch && isGoalMatch;
@@ -164,7 +171,39 @@ export function PersonalizedPrograms({ userGoal, bodyType, detectionResult }: Pe
               console.log('✅ Program loaded from detection:', matchingProgram.program?.name);
               return;
             } else {
-              console.warn('⚠️ No matching program found for:', normalizedMatchedImage, userGoal);
+              console.warn('⚠️ No matching program found for:', normalizedMatchedImage, targetGoal);
+              
+              // Show available programs for debugging
+              const imagePrograms = metadata.filter((program: DatasetProgram) => 
+                program.image === normalizedMatchedImage || program.image_norm === normalizedMatchedImage
+              );
+              console.log('🔍 Available programs for image:', normalizedMatchedImage, imagePrograms.map((p: DatasetProgram) => p.goal));
+              
+              // Try to find any program with the same goal (fallback)
+              const goalProgram = metadata.find((program: DatasetProgram) => program.goal === targetGoal);
+              if (goalProgram) {
+                console.log('🔄 Using fallback program with same goal:', goalProgram.image, goalProgram.goal);
+                const formattedProgram = goalProgram.weeklySchedule.map((dayData: DatasetDay) => ({
+                  day: dayData.day,
+                  workout: {
+                    id: dayData.workout.id,
+                    name: dayData.workout.name,
+                    duration: dayData.workout.duration,
+                    targetMuscles: dayData.workout.targetMuscles || [],
+                    estimatedCalories: dayData.workout.estimatedCalories || 0,
+                    exercises: dayData.workout.exercises || [],
+                    note: dayData.workout.note
+                  },
+                  meals: dayData.meals || [],
+                  water: dayData.water || 2.0,
+                  note: dayData.note,
+                  completed: false,
+                  completionRate: 0
+                }));
+                setWeeklyProgram(formattedProgram);
+                console.log('✅ Fallback program loaded:', goalProgram.program?.name);
+                return;
+              }
             }
           }
         }
@@ -298,6 +337,11 @@ export function PersonalizedPrograms({ userGoal, bodyType, detectionResult }: Pe
             </h1>
             <p className="text-emerald-100 mb-3">
               ปรับแต่งตามรูปร่างและเป้าหมายของคุณด้วย AI จาก Dataset จริง
+              {detectionResult && (
+                <span className="block text-xs mt-1 opacity-80">
+                  🎯 Detected: {detectionResult.match_image} ({(detectionResult.confidence || 0 * 100).toFixed(1)}% confidence)
+                </span>
+              )}
             </p>
             <div className="flex gap-4 items-center">
               <Badge variant="secondary" className="bg-white/20 text-white flex items-center gap-1">

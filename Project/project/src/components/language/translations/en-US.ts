@@ -41,7 +41,7 @@ export const translations = {
   'common.data': 'Data',
 
   // Header
-  'header.title': 'AI Health App',
+  'header.title': 'Fit Planner',
   'header.subtitle': 'AI-powered body analysis and personalized programs',
   'header.todaysProgress': "Today's Progress",
   'header.dayStreak': 'day streak',

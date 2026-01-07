@@ -51,9 +51,9 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
           <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Brain className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold">AI Health App</h1>
+          <h1 className="text-2xl font-bold">Fit Planner</h1>
           <p className="text-muted-foreground">
-            AI-powered body analysis and personalized programs
+            Your Personal Fitness Planning Assistant
           </p>
         </div>
 

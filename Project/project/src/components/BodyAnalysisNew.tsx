@@ -116,7 +116,13 @@ export function BodyAnalysis({ onAnalysisComplete, userGoal, onNavigateToProgram
       // Call Python AI detection API
       const formData = new FormData();
       formData.append('file', selectedImage);
-      formData.append('gender', userData.gender || 'men');
+      // Use correct gender mapping: male->men, female->women
+      const genderMapping = {
+        'male': 'men',
+        'female': 'women'
+      };
+      const aiGender = userData.gender ? genderMapping[userData.gender as 'male' | 'female'] || 'men' : 'men';
+      formData.append('gender', aiGender);
 
       const response = await fetch('http://localhost:8000/detect/', {
         method: 'POST',
@@ -169,6 +175,26 @@ export function BodyAnalysis({ onAnalysisComplete, userGoal, onNavigateToProgram
 
   const handleUserDataChange = (field: keyof UserData, value: string) => {
     setUserData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Calculate BMI
+  const calculateBMI = () => {
+    const height = parseFloat(userData.height);
+    const weight = parseFloat(userData.weight);
+    
+    if (height && weight && height > 0) {
+      const heightInMeters = height / 100;
+      return (weight / (heightInMeters * heightInMeters)).toFixed(1);
+    }
+    return null;
+  };
+
+  // Get BMI category
+  const getBMICategory = (bmi: number) => {
+    if (bmi < 18.5) return { text: 'น้ำหนักน้อย', color: 'text-blue-600', bg: 'bg-blue-100' };
+    if (bmi < 25) return { text: 'น้ำหนักปกติ', color: 'text-green-600', bg: 'bg-green-100' };
+    if (bmi < 30) return { text: 'น้ำหนักเกิน', color: 'text-yellow-600', bg: 'bg-yellow-100' };
+    return { text: 'อ้วน', color: 'text-red-600', bg: 'bg-red-100' };
   };
 
   const isFormComplete = () => {
@@ -342,14 +368,37 @@ export function BodyAnalysis({ onAnalysisComplete, userGoal, onNavigateToProgram
                       </div>
                     </div>
                   ) : !analysisResult ? (
-                    <Button 
-                      onClick={analyzeBodyType}
-                      className="flex items-center gap-2"
-                      size="lg"
-                    >
-                      <TrendingUp className="w-4 h-4" />
-                      เริ่มวิเคราะห์รูปร่าง
-                    </Button>
+                    <div className="space-y-4">
+                      {/* Gender Selection */}
+                      <div className="max-w-xs mx-auto space-y-2">
+                        <Label className="text-center block">เลือกเพศของคุณ</Label>
+                        <Select value={userData.gender} onValueChange={(value: string) => handleUserDataChange('gender', value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="เลือกเพศ" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="male">ชาย</SelectItem>
+                            <SelectItem value="female">หญิง</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <Button 
+                        onClick={analyzeBodyType}
+                        disabled={!userData.gender}
+                        className="flex items-center gap-2"
+                        size="lg"
+                      >
+                        <TrendingUp className="w-4 h-4" />
+                        เริ่มวิเคราะห์รูปร่าง
+                      </Button>
+                      
+                      {!userData.gender && (
+                        <p className="text-sm text-orange-600 text-center">
+                          ⚠️ กรุณาเลือกเพศก่อนเริ่มวิเคราะห์
+                        </p>
+                      )}
+                    </div>
                   ) : null}
                 </div>
               )}
@@ -428,6 +477,36 @@ export function BodyAnalysis({ onAnalysisComplete, userGoal, onNavigateToProgram
                 </div>
               </div>
 
+              {/* BMI Display */}
+              {userData.height && userData.weight && (
+                <div className="p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                        <TrendingUp className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">ค่าดัชนีมวลกาย (BMI)</p>
+                        <p className="text-2xl font-bold text-gray-800">
+                          {calculateBMI()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {(() => {
+                        const bmi = parseFloat(calculateBMI() || '0');
+                        const category = getBMICategory(bmi);
+                        return (
+                          <Badge className={`${category.bg} ${category.color} border-0`}>
+                            {category.text}
+                          </Badge>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="age" className="flex items-center gap-2">
@@ -499,14 +578,28 @@ export function BodyAnalysis({ onAnalysisComplete, userGoal, onNavigateToProgram
               <p className="text-gray-600 mb-4">
                 ระบบได้สร้างโปรแกรมออกกำลังกาย 7 วันเฉพาะสำหรับคุณแล้ว
               </p>
-              <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
-                <div className="flex items-center gap-1">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                <div className="flex items-center justify-center gap-1 text-gray-500">
                   <Target className="w-4 h-4" />
                   {getGoalText(userData.goal)}
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center justify-center gap-1 text-gray-500">
                   <User className="w-4 h-4" />
                   {getBodyTypeText(analysisResult.detectedType)}
+                </div>
+                {/* BMI Display in Results */}
+                <div className="flex items-center justify-center gap-1">
+                  <TrendingUp className="w-4 h-4" />
+                  <span className="font-medium">BMI: {calculateBMI()}</span>
+                  {(() => {
+                    const bmi = parseFloat(calculateBMI() || '0');
+                    const category = getBMICategory(bmi);
+                    return (
+                      <Badge variant="secondary" className={`ml-1 ${category.bg} ${category.color} text-xs border-0`}>
+                        {category.text}
+                      </Badge>
+                    );
+                  })()}
                 </div>
               </div>
             </div>

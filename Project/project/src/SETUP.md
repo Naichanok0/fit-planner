@@ -1,4 +1,4 @@
-# 🏥 AI Health App - Setup Guide
+# �️‍♀️ Fit Planner - Setup Guide
 
 ## 📋 **Prerequisites**
 

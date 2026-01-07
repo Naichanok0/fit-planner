@@ -1,6 +1,6 @@
-# 🏥 AI Health App
+# �️‍♀️ Fit Planner
 
-AI Health App เป็นแอปพลิเคชันสุขภาพที่ใช้เทคโนโลยี AI เพื่อวิเคราะห์รูปร่างจากภาพดิจิทัลและสร้างโปรแกรมออกกำลังกายแบบเฉพาะบุคคล
+Fit Planner เป็นแอปพลิเคชันวางแผนฟิตเนสส่วนบุคคลที่ใช้เทคโนโลジี AI เพื่อวิเคราะห์รูปร่างจากภาพดิจิทัลและสร้างโปรแกรมออกกำลังกายแบบเฉพาะบุคคล
 
 ## 🎯 **Features**
 
@@ -232,7 +232,7 @@ See [SETUP.md](./SETUP.md) for detailed troubleshooting guide.
 npm install && npm run dev
 ```
 
-Your AI Health App will be running at `http://localhost:3000`!
+Your Fit Planner app will be running at `http://localhost:3000`!
 
 ---
 

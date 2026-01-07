@@ -97,6 +97,42 @@ app.get('/db/health', async (_req, res, next) => {
 const authRoutes = require('./routes/auth'); // export: (q) => router
 app.use('/auth', authRoutes(q));
 
+/* 📊 Dashboard Routes */
+try {
+  const dashboardRoutes = require('./routes/dashboard');
+  app.use('/api/dashboard', dashboardRoutes(q));
+  console.log('[routes] Dashboard routes loaded');
+} catch (e) {
+  console.warn('[routes] Dashboard routes not found:', e.message);
+}
+
+/* 💪 Workout Routes */
+try {
+  const workoutRoutes = require('./routes/workout');
+  app.use('/api/workout', workoutRoutes(q));
+  console.log('[routes] Workout routes loaded');
+} catch (e) {
+  console.warn('[routes] Workout routes not found:', e.message);
+}
+
+/* 🍎 Nutrition Routes */
+try {
+  const nutritionRoutes = require('./routes/nutrition');
+  app.use('/api/nutrition', nutritionRoutes(q));
+  console.log('[routes] Nutrition routes loaded');
+} catch (e) {
+  console.warn('[routes] Nutrition routes not found:', e.message);
+}
+
+/* 📈 Analysis Routes */
+try {
+  const analysisRoutes = require('./routes/analysis');
+  app.use('/api/analysis', analysisRoutes(q));
+  console.log('[routes] Analysis routes loaded');
+} catch (e) {
+  console.warn('[routes] Analysis routes not found:', e.message);
+}
+
 /* (Optional) Middleware ตัวอย่าง */
 let authRequired;
 try {

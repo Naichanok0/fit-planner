@@ -218,6 +218,7 @@ async def pose(file: UploadFile = File(...)):
 async def detect(
     file: UploadFile = File(...),
     gender: Optional[str] = Form(default=None, description="men / women; เว้นว่าง = ค้นหาทั้งหมด"),
+    goal: Optional[str] = Form(default="muscle-gain", description="goal: muscle-gain / weight-loss / maintenance"),
 ):
     if emb_all is None or index_all is None:
         raise HTTPException(status_code=500, detail="Index ยังไม่พร้อม กรุณารีสตาร์ทหรือรอโหลด dataset")
@@ -242,11 +243,16 @@ async def detect(
 
     g = _g_from_rel(rel_path) if _g_from_rel(rel_path) in ("men", "women") else "unknown"
 
+    # Extract just filename from rel_path (remove folder part)
+    filename = os.path.basename(rel_path)
+    
     return {
-        "match_image": rel_path,
-        "gender": g,                 # gender ของภาพที่เจอ (จากโฟลเดอร์)
+        "match_image": filename,     # ส่งแค่ชื่อไฟล์ (เช่น "24.jpg")
+        "gender": g,                 # gender ของภาพที่เจอ (จากโฟลเดอร์)  
         "distance": dist,            # 0..2 ยิ่งต่ำยิ่งใกล้
-        "workout_plan": f"Plan for {rel_path}",
+        "goal": goal,                # ส่ง goal กลับไปด้วย
+        "confidence": max(0.0, 1.0 - dist / 2.0),  # แปลง distance เป็น confidence
+        "workout_plan": f"Plan for {filename}",
     }
 
 # ------------------------------
@@ -372,12 +378,25 @@ async def chest_front_and_side(
 
 @app.get("/metadata")
 def get_metadata():
-    metadata_path = os.path.join(DATASET_DIR, "metadata.json")
-    if not os.path.exists(metadata_path):
-        raise HTTPException(status_code=404, detail="metadata.json not found")
-    with open(metadata_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    return JSONResponse(content=data)
+    # Try metadata.normalized.json first, then fallback to metadata.json
+    metadata_paths = [
+        os.path.join(DATASET_DIR, "metadata.normalized.json"),
+        os.path.join(DATASET_DIR, "metadata.json")
+    ]
+    
+    for metadata_path in metadata_paths:
+        if os.path.exists(metadata_path):
+            try:
+                print(f"📋 Loading metadata from: {metadata_path}")
+                with open(metadata_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                print(f"✅ Loaded {len(data)} programs from metadata")
+                return JSONResponse(content=data)
+            except Exception as e:
+                print(f"❌ Error loading {metadata_path}: {e}")
+                continue
+    
+    raise HTTPException(status_code=404, detail="No metadata file found (tried metadata.normalized.json and metadata.json)")
 
 
 if __name__ == "__main__":

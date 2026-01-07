@@ -44,9 +44,9 @@ interface AuthContextType {
   apiFetch: <T = any>(path: string, init?: RequestInit) => Promise<T>;
 }
 
-// ✅ เปลี่ยน fallback เป็น 3001 (ไม่มี /api เพราะ server ของคุณ mount /auth/* ตรงๆ)
+// ✅ เปลี่ยน fallback เป็น 3002 (ไม่มี /api เพราะ server ของคุณ mount /auth/* ตรงๆ)
 const API_BASE =
-  (import.meta as any).env?.VITE_API_BASE ?? 'http://localhost:3001';
+  (import.meta as any).env?.VITE_API_BASE ?? 'http://localhost:3002';
 
 const LS_USER = 'fitlife-user';
 const LS_AT = 'access_token';

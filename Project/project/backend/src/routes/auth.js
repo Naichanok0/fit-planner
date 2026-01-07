@@ -117,5 +117,121 @@ module.exports = function buildAuthRoutes(q) {
     } catch (e) { next(e); }
   });
 
+  // GET /auth/me - ดึงข้อมูลผู้ใช้ที่ล็อกอินอยู่
+  router.get('/me', async (req, res, next) => {
+    try {
+      // ดึง token จาก Authorization header
+      const auth = req.headers.authorization;
+      if (!auth || !auth.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No token provided' });
+      }
+      
+      const token = auth.slice(7);
+      let payload;
+      try {
+        payload = jwt.verify(token, ACCESS_SECRET);
+      } catch {
+        return res.status(401).json({ error: 'Invalid token' });
+      }
+
+      const userId = Number(payload.sub);
+      const rows = await q(`
+        SELECT id, email, first_name, last_name, age, gender, 
+               fitness_level, goal, phone, profile_picture, 
+               join_date, last_login 
+        FROM users WHERE id=?
+      `, [userId]);
+
+      if (!rows.length) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const user = rows[0];
+      res.json({
+        id: user.id.toString(),
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        age: user.age,
+        gender: user.gender,
+        fitnessLevel: user.fitness_level,
+        goal: user.goal,
+        phone: user.phone,
+        profilePicture: user.profile_picture,
+        joinDate: user.join_date,
+        lastLogin: user.last_login
+      });
+    } catch (e) { 
+      next(e); 
+    }
+  });
+
+  // PATCH /auth/me - อัพเดทข้อมูลผู้ใช้
+  router.patch('/me', async (req, res, next) => {
+    try {
+      // ดึง token จาก Authorization header
+      const auth = req.headers.authorization;
+      if (!auth || !auth.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No token provided' });
+      }
+      
+      const token = auth.slice(7);
+      let payload;
+      try {
+        payload = jwt.verify(token, ACCESS_SECRET);
+      } catch {
+        return res.status(401).json({ error: 'Invalid token' });
+      }
+
+      const userId = Number(payload.sub);
+      const { firstName, lastName, age, gender, fitnessLevel, goal, phone } = req.body;
+
+      // อัพเดทข้อมูลที่ส่งมา
+      const updates = [];
+      const values = [];
+      
+      if (firstName !== undefined) { updates.push('first_name=?'); values.push(firstName); }
+      if (lastName !== undefined) { updates.push('last_name=?'); values.push(lastName); }
+      if (age !== undefined) { updates.push('age=?'); values.push(age); }
+      if (gender !== undefined) { updates.push('gender=?'); values.push(gender); }
+      if (fitnessLevel !== undefined) { updates.push('fitness_level=?'); values.push(fitnessLevel); }
+      if (goal !== undefined) { updates.push('goal=?'); values.push(goal); }
+      if (phone !== undefined) { updates.push('phone=?'); values.push(phone); }
+
+      if (updates.length === 0) {
+        return res.status(400).json({ error: 'No valid fields to update' });
+      }
+
+      values.push(userId);
+      await q(`UPDATE users SET ${updates.join(', ')} WHERE id=?`, values);
+
+      // ส่งข้อมูลที่อัพเดทแล้วกลับ
+      const rows = await q(`
+        SELECT id, email, first_name, last_name, age, gender, 
+               fitness_level, goal, phone, profile_picture, 
+               join_date, last_login 
+        FROM users WHERE id=?
+      `, [userId]);
+
+      const user = rows[0];
+      res.json({
+        id: user.id.toString(),
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        age: user.age,
+        gender: user.gender,
+        fitnessLevel: user.fitness_level,
+        goal: user.goal,
+        phone: user.phone,
+        profilePicture: user.profile_picture,
+        joinDate: user.join_date,
+        lastLogin: user.last_login
+      });
+    } catch (e) { 
+      next(e); 
+    }
+  });
+
   return router;
 };
